@@ -2,6 +2,10 @@ A python rewrite of ALE, easy to use, part of a three level method in progress
 
 requirement : python 3
 
+
+input : lower tree and upper tree
+output : reconciliation scenarios in recphyloxml, see https://github.com/simonpenel/rectree2svg to get a visual represenation in svg, and event frequencies.
+
 How to : 
 
 	python3 main.py upper_dir lower_dir
@@ -62,10 +66,11 @@ todo :
 
 
 Some included examples :
-	ex_pylori : an example with 1 gene tree, and 1 species tree
+	ex_pylori : an example with 1 gene tree, and 1 species tree, from Alexia Nguyen Trung
 		
-	ex_ALE : example given in ALE git, with amalgamation
+	ex_ALE : example given in ALE git (https://github.com/ssolo/ALE), with amalgamation
 	
-	ex_erwinia : example with a matching file for leaves, from Manzano Marin et al.
+	ex_erwinia : example with a matching file for leaves, from Manzano Marin et al. https://doi.org/10.1038/s41396-019-0533-6
+
 
 
