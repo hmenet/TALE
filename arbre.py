@@ -139,6 +139,17 @@ class Tree:
         self.right.parent=self
         self.left.parent=self
 
+    def undated_birth(self):
+        self.right = Tree()
+        self.left = Tree()
+        self.right.root=self.root
+        self.left.root=self.root
+        self.right.id=2*self.id +1 
+        self.left.id=2*self.id
+        self.right.parent=self
+        self.left.parent=self
+
+
     def birth_specie(self, t):
         self.birth(t)
         
@@ -366,6 +377,12 @@ class Tree:
             else:
                 t=t+self.left.post_order_traversal()+self.right.post_order_traversal()+self.right2.post_order_traversal()
         return t
+
+    def sibling(self):
+        if self.parent.left==self:
+            return self.parent.right
+        if self.parent.right==self:
+            return self.parent.left
     
     #return the list of ancestors of a node
     def ancestor(self):

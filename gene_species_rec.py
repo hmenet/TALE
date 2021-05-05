@@ -8,6 +8,9 @@ Created on Thu Jan 16 14:28:33 2020
 
 import numpy as np
 
+from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match, inter_list
+
+
 ################################
 #vraisemblance rec symbiote gene
 ################################
@@ -56,26 +59,11 @@ def compute_upper_gene_E(upper_post_order, rates):
 
     return E, Eavg_no_log
 
-def log_add(a,b):
-    m=min(a,b)
-    M=max(a,b)
-    return M + np.log(1+np.exp(m-M))
-
-#a>b
-def log_minus(a,b):
-    if a >= b:
-        return a+np.log(1-np.exp(b-a))
-
-def log_add_list(l):
-    M=max(l)
-    s=0
-    for a in l:
-        s+=(np.exp(a-M))
-    return M+np.log(s)
 
 #proba de transfert pre processed, dans P_transfer[e][e2] de e vers e2
 #c_match = clade_to_matched_node
-def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_match, more_output=False, mult_gene_match=False):
+def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_match, more_output=False):
+    mult_gene_match=is_mult_match(c_match)
     d_r= np.log(rates["D"])
     l_r= np.log(rates["L"])
     t_r= np.log(rates["T"])
@@ -132,10 +120,12 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
             e=upper_queue.pop()
             if not mult_gene_match:
                 bool_continue_mult_match=not (c in c_match.keys() and c_match[c]==e)
+                bool_continue_mult_match2=not(c in c_match.keys()) or (c_match[c] in e.leaves())
             else:
                 bool_continue_mult_match=not (c in c_match.keys() and e in c_match[c])
+                bool_continue_mult_match2=not(c in c_match.keys()) or (inter_list(c_match[c],e.leaves()))
             if bool_continue_mult_match:
-                if not(c in c_match.keys()) or (c_match[c] in e.leaves()):
+                if bool_continue_mult_match2:
                     #a=1
                     #a+=(-2)*d_r*E[e]
                     #a+=Eavg
@@ -154,10 +144,14 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                             #b+=(P[e.left][cL]*P[e.right][cR]+P[e.left][cR]*P[e.right][cL])*clade_frequencies[c][(cL,cR)]
                             b_l.append(b1)
                         if c in c_match.keys():
-                            if c_match[c] in e.right.leaves():
+                            if mult_gene_match:
+                                c_match_c=c_match[c]
+                            else:
+                                c_match_c=[c_match[c]]
+                            if inter_list(c_match_c, e.right.leaves()):
                                 b21=E[e.left]+P_TL[e.right][c]+s_r
                                 b_l.append(b21)
-                            if c_match[c] in e.left.leaves():
+                            if inter_list(c_match_c, e.left.leaves()):
                                 b22=E[e.right]+P_TL[e.left][c]+s_r
                                 b_l.append(b22)
 
@@ -183,7 +177,6 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                         b6=d_r+P[e][cL]+P[e][cR]+np.log(clade_frequencies[c][(cL,cR)])
                         b_l.append(b6)
                         #b+=d_r*P[e][cL]*P[e][cR]*clade_frequencies[c][(cL,cR)]
-
                     b=log_add_list(b_l)
 
                     resultat=b-np.log(a)
@@ -259,10 +252,6 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                     b=log_add_list(b_l)
                     resultat=b-np.log(a)
                     P[e][c]=resultat
-
-
-
-
         P_avg[c]=log_add_list([P[e][c] for e in upper_post_order])
         for e in upper_post_order:
             if e.isRoot():

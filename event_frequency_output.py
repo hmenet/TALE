@@ -30,6 +30,7 @@ def output_event_frequency(l_event_aggregate, output_file):
     f.close()
 
 def output_frequency_for_all_family(l_event_by_family, gene_family_list, output_file="event_frequency"):
+    print(len(l_event_by_family))
     for i in range(len(l_event_by_family)):
-        gene_family_list[i]
+        print(len(l_event_by_family[i]))
         output_event_frequency(l_event_by_family[i], output_file+gene_family_list[i])

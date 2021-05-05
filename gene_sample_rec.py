@@ -9,27 +9,11 @@ Created on Thu Jan 16 14:18:17 2020
 import random as rd
 import numpy as np
 
-
-def log_add(a,b):
-    m=min(a,b)
-    M=max(a,b)
-    return M + np.log(1+np.exp(m-M))
-
-#a>b
-def log_minus(a,b):
-    if a >= b:
-        return a+np.log(1-np.exp(b-a))
-
-def log_add_list(l):
-    M=max(l)
-    s=0
-    for a in l:
-        s+=(np.exp(a-M))
-    return M+np.log(s)
+from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match
 
 
-
-def sample_gene_upper_rec(P, P_TL,E, parasite_post_order, clades_data, rates, c_match, likelihood, ancestrale_correction_size, mult_gene_match=False, return_r=False, best=False):
+def sample_gene_upper_rec(P, P_TL,E, parasite_post_order, clades_data, rates, c_match, likelihood, ancestrale_correction_size, return_r=False, best=False):
+    mult_gene_match=is_mult_match(c_match)
     clade_post_order, clade_frequencies, clade_elements, clade_keys=clades_data
     r=dict()
     for u in clade_post_order:

@@ -12,7 +12,7 @@ Created on Thu Jan 16 14:17:16 2020
 
 import arbre
 
-
+from rec_aux_func import is_mult_match
 
 
 def add_event(event_name,e,u,f,v,g,w, d_events, name_to_tree, t, Loss=False, Transfer=False):
@@ -183,6 +183,21 @@ def big_host(host_list):
 
 
 def save_recphyloxml_from_l_event(host_list, l_event_by_family, file,symbiont_list=None, c_match_list=None, clade_data_list=None, clade=False, leaf_matching_list=None):
+
+    if c_match_list != None:
+        if is_mult_match(c_match_list[0]):
+            leaf_matching=[]
+            for i_gene in range(len(l_event_by_family)):
+                d_match=dict()
+                for u in l_event_by_family[i_gene]:
+                    if len(clade_data_list[i_gene][2][u[4]])==1:
+                        d_match[clade_data_list[i_gene][2][u[4]][0]]=u[3].name
+                    if len(clade_data_list[i_gene][2][u[6]])==1:
+                        d_match[clade_data_list[i_gene][2][u[6]][0]]=u[5].name
+                leaf_matching.append(d_match)
+            leaf_matching_list=leaf_matching
+
+
     if len(host_list)>1:
         host=big_host(host_list)
     else:

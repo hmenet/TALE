@@ -53,24 +53,33 @@ optional arguments:
 
 
 todo :
-
-	multiprocessing : parallel for gene families
+	
+	compartment, no E ?
 	
 	save amalgamation
 	
 	more verbose
 	
-	possibility for one lower leaf to be match to multiple upper ones with uniform prior
+	commenting and renaming pass (for upper/intermediate/lower vocab) 
 	
 	add 3 level
+		-> as an option to 2Level rec functions
+		-> intermediate can be amalgamated or not
+			-> amalgamated -> check if rooted or unrooted 
+			-> 
+		-> log
+		-> input
+		-> output
 
 
 Some included examples :
-	ex_pylori : an example with 1 gene tree, and 1 species tree, from Alexia Nguyen Trung
+	ex_pylori : an example with 1 gene tree, and 1 strains tree, and with gene tree and population tree with matching file and multiple match for one leaf, from Alexia Nguyen Trung
+		python3 main.py "ex_pylori/pylori_species_tree/" "ex_pylori/genes_sub2/"
+		python3 main.py "ex_pylori/pop_pylori/" "ex_pylori/genes_sub2/" -mfile "matching_pop_genes"
 		
-	ex_ALE : example given in ALE git (https://github.com/ssolo/ALE), with amalgamation
+		
+	ex_ALE : example given in ALE git (https://github.com/wssolo/ALE), with amalgamation
 	
 	ex_erwinia : example with a matching file for leaves, from Manzano Marin et al. https://doi.org/10.1038/s41396-019-0533-6
-
-
+		python3 main.py "ex_erwinia/symbiont/" "ex_erwinia/genes/" -mdir "ex_erwinia/lower_matching/"
 

@@ -1,0 +1,228 @@
+T	giving species	receiving species	observed frequency
+T	Yersinia_pestis_CO92	enterobacteria.nwk23	0.4
+T	enterobacteria.nwk20	enterobacteria.nwk9	0.38
+T	enterobacteria.nwk3	enterobacteria.nwk5	0.22
+T	enterobacteria.nwk17	Escherichia_coli_K12_MG1655	0.19
+T	enterobacteria.nwk19	enterobacteria.nwk22	0.18
+T	enterobacteria.nwk9	enterobacteria.nwk20	0.16
+T	enterobacteria.nwk5	enterobacteria.nwk18	0.13
+T	enterobacteria.nwk22	enterobacteria.nwk9	0.1
+T	enterobacteria.nwk19	enterobacteria.nwk9	0.1
+T	enterobacteria.nwk22	enterobacteria.nwk20	0.1
+T	Escherichia_coli_K12_MG1655	enterobacteria.nwk17	0.09
+T	enterobacteria.nwk1	enterobacteria.nwk20	0.09
+T	enterobacteria.nwk1	enterobacteria.nwk9	0.09
+T	enterobacteria.nwk18	enterobacteria.nwk23	0.09
+T	enterobacteria.nwk23	Yersinia_pestis_CO92	0.09
+T	EwBiE	EwApS	0.08
+T	enterobacteria.nwk0	Yersinia_pestis_CO92	0.08
+T	enterobacteria.nwk1	Yersinia_pestis_CO92	0.06
+T	enterobacteria.nwk2	enterobacteria.nwk5	0.06
+T	enterobacteria.nwk1	enterobacteria.nwk20	0.05
+T	enterobacteria.nwk1	enterobacteria.nwk20	0.05
+T	enterobacteria.nwk1	enterobacteria.nwk9	0.04
+T	EwApS	EwBiE	0.03
+T	enterobacteria.nwk2	enterobacteria.nwk20	0.03
+T	enterobacteria.nwk5	EwApS	0.03
+T	enterobacteria.nwk2	EwBiE	0.03
+T	enterobacteria.nwk16	EwBiE	0.03
+T	enterobacteria.nwk3	enterobacteria.nwk16	0.02
+T	enterobacteria.nwk18	enterobacteria.nwk5	0.02
+T	enterobacteria.nwk22	enterobacteria.nwk19	0.02
+T	enterobacteria.nwk18	enterobacteria.nwk23	0.02
+T	enterobacteria.nwk20	enterobacteria.nwk22	0.02
+T	enterobacteria.nwk1	enterobacteria.nwk3	0.02
+T	enterobacteria.nwk3	EwApS	0.02
+T	enterobacteria.nwk2	EwApS	0.02
+T	enterobacteria.nwk3	EwBiE	0.02
+T	enterobacteria.nwk9	enterobacteria.nwk19	0.02
+T	enterobacteria.nwk2	enterobacteria.nwk9	0.02
+T	enterobacteria.nwk2	enterobacteria.nwk19	0.02
+T	enterobacteria.nwk18	enterobacteria.nwk9	0.02
+T	enterobacteria.nwk20	enterobacteria.nwk8	0.02
+T	enterobacteria.nwk1	enterobacteria.nwk8	0.02
+T	enterobacteria.nwk1	enterobacteria.nwk9	0.02
+T	enterobacteria.nwk0	enterobacteria.nwk3	0.02
+T	enterobacteria.nwk1	enterobacteria.nwk19	0.01
+T	enterobacteria.nwk3	enterobacteria.nwk13	0.01
+T	enterobacteria.nwk13	EwBiE	0.01
+T	Yersinia_pestis_CO92	enterobacteria.nwk17	0.01
+T	enterobacteria.nwk19	Yersinia_pestis_CO92	0.01
+T	enterobacteria.nwk1	EwBiE	0.01
+T	enterobacteria.nwk1	EwApS	0.01
+T	enterobacteria.nwk20	enterobacteria.nwk3	0.01
+T	enterobacteria.nwk5	enterobacteria.nwk6	0.01
+T	enterobacteria.nwk18	EwBiE	0.01
+T	Yersinia_pestis_CO92	EKOCA	0.01
+T	enterobacteria.nwk2	enterobacteria.nwk23	0.01
+T	Yersinia_pestis_CO92	enterobacteria.nwk4	0.01
+T	Yersinia_pestis_CO92	Photorhabdus_luminescens_TTO1	0.01
+T	Photorhabdus_luminescens_TTO1	Photorhabdus_asymbiotica_ATCC43949	0.01
+T	enterobacteria.nwk0	enterobacteria.nwk9	0.01
+T	enterobacteria.nwk3	enterobacteria.nwk4	0.01
+T	enterobacteria.nwk3	enterobacteria.nwk23	0.01
+T	enterobacteria.nwk2	enterobacteria.nwk5	0.01
+T	ELAFE	EKOCA	0.01
+T	enterobacteria.nwk18	enterobacteria.nwk8	0.01
+T	enterobacteria.nwk20	enterobacteria.nwk7	0.01
+T	enterobacteria.nwk2	enterobacteria.nwk9	0.01
+T	enterobacteria.nwk9	enterobacteria.nwk22	0.01
+T	enterobacteria.nwk22	enterobacteria.nwk8	0.01
+T	enterobacteria.nwk2	enterobacteria.nwk4	0.01
+T	enterobacteria.nwk18	enterobacteria.nwk8	0.01
+T	enterobacteria.nwk0	enterobacteria.nwk20	0.01
+T	enterobacteria.nwk1	enterobacteria.nwk18	0.01
+T	enterobacteria.nwk18	enterobacteria.nwk16	0.01
+T	enterobacteria.nwk2	EwBiE	0.01
+T	enterobacteria.nwk22	Pantoea_calida_DSM_22759	0.01
+T	Pantoea_calida_DSM_22759	enterobacteria.nwk9	0.01
+T	enterobacteria.nwk0	enterobacteria.nwk20	0.01
+T	enterobacteria.nwk4	EwApS	0.01
+T	enterobacteria.nwk0	enterobacteria.nwk16	0.01
+T	enterobacteria.nwk2	Yersinia_pestis_CO92	0.01
+T	enterobacteria.nwk1	EwBiE	0.01
+T	Sodalis_pierantonius_SOPE	enterobacteria.nwk2	0.01
+T	enterobacteria.nwk1	enterobacteria.nwk19	0.01
+T	Escherichia_coli_K12_MG1655	Yersinia_pestis_CO92	0.01
+T	enterobacteria.nwk1	enterobacteria.nwk13	0.01
+T	enterobacteria.nwk3	enterobacteria.nwk6	0.01
+T	enterobacteria.nwk0	enterobacteria.nwk5	0.01
+T	enterobacteria.nwk2	enterobacteria.nwk9	0.01
+T	enterobacteria.nwk4	enterobacteria.nwk20	0.01
+T	enterobacteria.nwk23	enterobacteria.nwk4	0.01
+T	enterobacteria.nwk17	enterobacteria.nwk7	0.01
+T	enterobacteria.nwk2	enterobacteria.nwk5	0.01
+T	enterobacteria.nwk2	Photorhabdus_asymbiotica_ATCC43949	0.01
+T	enterobacteria.nwk19	enterobacteria.nwk4	0.01
+T	enterobacteria.nwk17	Yersinia_pestis_CO92	0.01
+T	enterobacteria.nwk3	enterobacteria.nwk18	0.01
+TL	giving species	receiving species	observed frequency
+TL	enterobacteria.nwk19	enterobacteria.nwk23	0.18
+TL	enterobacteria.nwk21	enterobacteria.nwk9	0.06
+TL	enterobacteria.nwk21	enterobacteria.nwk22	0.06
+TL	Hamiltonella_defensa_5AT	enterobacteria.nwk22	0.03
+TL	enterobacteria.nwk23	enterobacteria.nwk20	0.02
+TL	enterobacteria.nwk18	enterobacteria.nwk5	0.02
+TL	enterobacteria.nwk19	enterobacteria.nwk5	0.02
+TL	enterobacteria.nwk13	EwApS	0.01
+TL	enterobacteria.nwk17	enterobacteria.nwk23	0.01
+TL	Yersinia_pestis_CO92	enterobacteria.nwk22	0.01
+TL	enterobacteria.nwk3	enterobacteria.nwk9	0.01
+TL	Hamiltonella_defensa_5AT	enterobacteria.nwk4	0.01
+TL	enterobacteria.nwk23	Yersinia_pestis_CO92	0.01
+TL	enterobacteria.nwk19	enterobacteria.nwk20	0.01
+TL	enterobacteria.nwk18	EwApS	0.01
+TL	EKOCA	enterobacteria.nwk23	0.01
+TL	enterobacteria.nwk23	enterobacteria.nwk9	0.01
+TL	enterobacteria.nwk6	EwApS	0.01
+TL	Hamiltonella_defensa_5AT	enterobacteria.nwk9	0.01
+TL	Hamiltonella_defensa_5AT	enterobacteria.nwk8	0.01
+TL	enterobacteria.nwk8	enterobacteria.nwk23	0.01
+TL	enterobacteria.nwk18	EwBiE	0.01
+TL	Pantoea_calida_DSM_22759	enterobacteria.nwk20	0.01
+TL	EwBiE	enterobacteria.nwk9	0.01
+TL	Sodalis_pierantonius_SOPE	EwApS	0.01
+TL	Escherichia_coli_K12_MG1655	enterobacteria.nwk23	0.01
+TL	enterobacteria.nwk13	Yersinia_pestis_CO92	0.01
+TL	enterobacteria.nwk7	EwBiE	0.01
+TL	Yersinia_pestis_CO92	enterobacteria.nwk4	0.01
+TL	enterobacteria.nwk23	enterobacteria.nwk9	0.01
+TL	enterobacteria.nwk23	enterobacteria.nwk20	0.01
+TL	enterobacteria.nwk6	enterobacteria.nwk18	0.01
+TL	enterobacteria.nwk7	Escherichia_coli_K12_MG1655	0.01
+TL	Photorhabdus_asymbiotica_ATCC43949	EwApS	0.01
+TL	Yersinia_pestis_CO92	Escherichia_coli_K12_MG1655	0.01
+TL	enterobacteria.nwk8	enterobacteria.nwk16	0.01
+SL	parent species	child species keeping the gene	child species losing the gene	observed frequency
+SL	enterobacteria.nwk16	EwApS	EwDaI	0.77
+SL	enterobacteria.nwk6	enterobacteria.nwk16	enterobacteria.nwk7	0.71
+SL	enterobacteria.nwk4	enterobacteria.nwk17	enterobacteria.nwk5	0.56
+SL	enterobacteria.nwk19	enterobacteria.nwk20	enterobacteria.nwk21	0.16
+SL	enterobacteria.nwk3	enterobacteria.nwk4	Escherichia_coli_K12_MG1655	0.15
+SL	enterobacteria.nwk18	Yersinia_pestis_CO92	enterobacteria.nwk19	0.14
+SL	enterobacteria.nwk18	Yersinia_pestis_CO92	enterobacteria.nwk19	0.12
+SL	enterobacteria.nwk4	enterobacteria.nwk5	enterobacteria.nwk17	0.11
+SL	enterobacteria.nwk19	enterobacteria.nwk20	enterobacteria.nwk21	0.1
+SL	enterobacteria.nwk2	enterobacteria.nwk3	enterobacteria.nwk18	0.07
+SL	enterobacteria.nwk8	enterobacteria.nwk9	enterobacteria.nwk15	0.07
+SL	enterobacteria.nwk0	enterobacteria.nwk1	enterobacteria.nwk23	0.06
+SL	enterobacteria.nwk5	EwBiE	enterobacteria.nwk6	0.06
+SL	enterobacteria.nwk2	enterobacteria.nwk3	enterobacteria.nwk18	0.06
+SL	enterobacteria.nwk5	EwBiE	enterobacteria.nwk6	0.04
+SL	enterobacteria.nwk2	enterobacteria.nwk18	enterobacteria.nwk3	0.04
+SL	enterobacteria.nwk18	enterobacteria.nwk19	Yersinia_pestis_CO92	0.04
+SL	enterobacteria.nwk21	Hamiltonella_defensa_5AT	Hamiltonella_defensa_ZA17	0.03
+SL	enterobacteria.nwk18	enterobacteria.nwk19	Yersinia_pestis_CO92	0.03
+SL	enterobacteria.nwk1	enterobacteria.nwk2	enterobacteria.nwk22	0.02
+SL	enterobacteria.nwk21	Hamiltonella_defensa_5AT	Hamiltonella_defensa_ZA17	0.02
+SL	enterobacteria.nwk18	enterobacteria.nwk19	Yersinia_pestis_CO92	0.02
+SL	enterobacteria.nwk16	EwApS	EwDaI	0.01
+SL	enterobacteria.nwk1	enterobacteria.nwk2	enterobacteria.nwk22	0.01
+SL	enterobacteria.nwk21	Hamiltonella_defensa_5AT	Hamiltonella_defensa_ZA17	0.01
+SL	enterobacteria.nwk2	enterobacteria.nwk18	enterobacteria.nwk3	0.01
+SL	enterobacteria.nwk0	enterobacteria.nwk1	enterobacteria.nwk23	0.01
+SL	enterobacteria.nwk11	ELAFE	EKOCA	0.01
+SL	enterobacteria.nwk7	enterobacteria.nwk8	EwAmC	0.01
+SL	enterobacteria.nwk1	enterobacteria.nwk2	enterobacteria.nwk22	0.01
+SL	enterobacteria.nwk18	enterobacteria.nwk19	Yersinia_pestis_CO92	0.01
+SL	enterobacteria.nwk8	enterobacteria.nwk9	enterobacteria.nwk15	0.01
+SL	enterobacteria.nwk0	enterobacteria.nwk1	enterobacteria.nwk23	0.01
+SL	enterobacteria.nwk5	enterobacteria.nwk6	EwBiE	0.01
+SL	enterobacteria.nwk6	enterobacteria.nwk16	enterobacteria.nwk7	0.01
+SL	enterobacteria.nwk0	enterobacteria.nwk1	enterobacteria.nwk23	0.01
+SL	enterobacteria.nwk4	enterobacteria.nwk5	enterobacteria.nwk17	0.01
+SL	enterobacteria.nwk18	Yersinia_pestis_CO92	enterobacteria.nwk19	0.01
+SL	enterobacteria.nwk2	enterobacteria.nwk18	enterobacteria.nwk3	0.01
+SL	enterobacteria.nwk1	enterobacteria.nwk2	enterobacteria.nwk22	0.01
+SL	enterobacteria.nwk3	enterobacteria.nwk4	Escherichia_coli_K12_MG1655	0.01
+SL	enterobacteria.nwk2	enterobacteria.nwk18	enterobacteria.nwk3	0.01
+SL	enterobacteria.nwk6	enterobacteria.nwk7	enterobacteria.nwk16	0.01
+SL	enterobacteria.nwk7	enterobacteria.nwk8	EwAmC	0.01
+S	parent species	observed frequency
+S	enterobacteria.nwk20	1.0
+S	enterobacteria.nwk9	1.0
+S	enterobacteria.nwk12	1.0
+S	enterobacteria.nwk13	1.0
+S	enterobacteria.nwk14	1.0
+S	enterobacteria.nwk10	1.0
+S	enterobacteria.nwk22	1.0
+S	enterobacteria.nwk17	1.0
+S	enterobacteria.nwk23	0.99
+S	enterobacteria.nwk11	0.99
+S	enterobacteria.nwk5	0.72
+S	enterobacteria.nwk3	0.56
+S	enterobacteria.nwk2	0.42
+S	enterobacteria.nwk1	0.3
+S	enterobacteria.nwk18	0.26
+S	enterobacteria.nwk4	0.21
+S	enterobacteria.nwk1	0.18
+S	enterobacteria.nwk18	0.18
+S	enterobacteria.nwk3	0.14
+S	enterobacteria.nwk4	0.14
+S	enterobacteria.nwk1	0.1
+S	enterobacteria.nwk0	0.09
+S	enterobacteria.nwk19	0.09
+S	enterobacteria.nwk3	0.09
+S	enterobacteria.nwk2	0.08
+S	enterobacteria.nwk19	0.08
+S	enterobacteria.nwk0	0.08
+S	enterobacteria.nwk2	0.07
+S	enterobacteria.nwk1	0.06
+S	enterobacteria.nwk0	0.05
+S	enterobacteria.nwk1	0.05
+S	enterobacteria.nwk0	0.03
+S	enterobacteria.nwk18	0.02
+S	enterobacteria.nwk2	0.02
+S	enterobacteria.nwk2	0.02
+S	enterobacteria.nwk0	0.02
+S	enterobacteria.nwk2	0.01
+S	enterobacteria.nwk19	0.01
+S	enterobacteria.nwk18	0.01
+S	enterobacteria.nwk2	0.01
+S	enterobacteria.nwk3	0.01
+S	enterobacteria.nwk6	0.01
+S	enterobacteria.nwk0	0.01
+S	enterobacteria.nwk0	0.01
+S	enterobacteria.nwk5	0.01
+S	enterobacteria.nwk2	0.01
+S	enterobacteria.nwk0	0.01
