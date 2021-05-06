@@ -1,9 +1,9 @@
 A python rewrite of ALE, easy to use, part of a three level method in progress
 
-##requirement : 
+# requirement : 
 python 3
 
-##Usage : 
+# Usage : 
 
 input : lower tree and upper tree
 output : reconciliation scenarios in recphyloxml, see https://github.com/simonpenel/rectree2svg to get a visual representation in svg, and event frequencies.
@@ -17,21 +17,12 @@ Example, command line from the repo :
 
 Usage: 
 
-'''shell
-	main.py [-h] [-mdir MATCHING_DIR] [-mfile MATCHING_FILE] [-o OUTPUT]
-              	[-of OUTPUT_FREQ] [-ns N_REC_SAMPLE]
-               [-nre N_RATES_ESTIMATION_STEPS]
-               [-nres N_RATES_ESTIMATION_REC_SAMPLE] [-b]
-               [-nrxml N_RECPHYLOXML] [-mp] [-mpf] [-tl THIRD_UPPER_LEVEL]
-               [-imd INTER_MATCH_DIR] [-imf INTER_MATCH_FILE] [-v]
-               upper_dir lower_dir
+
+	main.py [-h] [-mdir MATCHING_DIR] [-mfile MATCHING_FILE] [-o OUTPUT][-of OUTPUT_FREQ] [-ns N_REC_SAMPLE][-nre N_RATES_ESTIMATION_STEPS][-nres N_RATES_ESTIMATION_REC_SAMPLE] [-b][-nrxml N_RECPHYLOXML] [-mp] [-mpf] [-tl THIRD_UPPER_LEVEL][-imd INTER_MATCH_DIR] [-imf INTER_MATCH_FILE] [-v] 
 
 positional arguments:
-  upper_dir             directory with newick unrooted files for each lower
-                        level tree
-  lower_dir             directory with newick unrooted files for each lower
-                        level tree, possibility of list of trees to use
-                        amalgamation
+  upper_dir             directory with newick unrooted files for each lower level tree
+  lower_dir             directory with newick unrooted files for each lower level tree, possibility of list of trees to use amalgamation
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -92,7 +83,7 @@ optional arguments:
 
 
 
-##todo :
+# todo :
 	
 + compartment, no E ?	
 + save amalgamation
@@ -102,7 +93,7 @@ optional arguments:
 + 3 level rates inference
 
 
-##Some included examples :
+# Some included examples :
 
 + ex_pylori : an example with 1 gene tree, and 1 strains tree, and with gene tree and population tree with matching file and multiple match for one leaf, from Alexia Nguyen Trung
 		
