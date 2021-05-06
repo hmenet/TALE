@@ -1,20 +1,23 @@
 A python rewrite of ALE, easy to use, part of a three level method in progress
 
-requirement : python 3
+##requirement : 
+python 3
 
+##Usage : 
 
 input : lower tree and upper tree
-output : reconciliation scenarios in recphyloxml, see https://github.com/simonpenel/rectree2svg to get a visual represenation in svg, and event frequencies.
+output : reconciliation scenarios in recphyloxml, see https://github.com/simonpenel/rectree2svg to get a visual representation in svg, and event frequencies.
 
-How to : 
 
-	python3 main.py upper_dir lower_dir
+	python3 src/main.py upper_dir lower_dir
 	
 Example, command line from the repo :
 
-	python3 main.py "ex_pylori/pylori_species_tree/" "ex_pylori/genes_sub2/" -nre 1 -mp
+	python3 src/main.py "ex_pylori/pylori_species_tree/" "ex_pylori/genes_sub2/" -nre 1 -mp
 
 Usage: 
+
+'''shell
 	main.py [-h] [-mdir MATCHING_DIR] [-mfile MATCHING_FILE] [-o OUTPUT]
               	[-of OUTPUT_FREQ] [-ns N_REC_SAMPLE]
                [-nre N_RATES_ESTIMATION_STEPS]
@@ -85,11 +88,11 @@ optional arguments:
                         format as for the default levels matchings (default:
                         None)
   -v, --verbose         increase output verbosity (default: False)
+'''
 
 
 
-
-todo :
+##todo :
 	
 + compartment, no E ?	
 + save amalgamation
@@ -99,7 +102,7 @@ todo :
 + 3 level rates inference
 
 
-Some included examples :
+##Some included examples :
 
 + ex_pylori : an example with 1 gene tree, and 1 strains tree, and with gene tree and population tree with matching file and multiple match for one leaf, from Alexia Nguyen Trung
 		
