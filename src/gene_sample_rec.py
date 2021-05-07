@@ -96,8 +96,8 @@ def sample_gene_upper_rec(P, P_TL,E, parasite_post_order, clades_data, rates, c_
                     for h in possible_transfer:
                         #l_proba.append(lclade_frequencies[c][(cL,cR)]+P_to_use[e][cR]+t_r+P_to_use[h][cL]+P_t[e][h])
                         if P_transfer:
-                            l_proba.append(lclade_frequencies[c][(cL,cR)]+P[e][cR]+t_r+P[h][cL]+np.log(P_transfer[e][h]))
-                            l_proba.append(lclade_frequencies[c][(cL,cR)]+P[e][cL]+t_r+P[h][cR]+np.log(P_transfer[e][h]))
+                            l_proba.append(lclade_frequencies[c][(cL,cR)]+P[e][cR]+t_r+P[h][cL]+P_transfer[e][h])
+                            l_proba.append(lclade_frequencies[c][(cL,cR)]+P[e][cL]+t_r+P[h][cR]+P_transfer[e][h])
                         else:
                             l_proba.append(lclade_frequencies[c][(cL,cR)]+P[e][cR]+t_r+P[h][cL]-np.log(len(parasite_post_order)-ancestrale_correction_size[e]))
                             l_proba.append(lclade_frequencies[c][(cL,cR)]+P[e][cL]+t_r+P[h][cR]-np.log(len(parasite_post_order)-ancestrale_correction_size[e]))

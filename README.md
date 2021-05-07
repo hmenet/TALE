@@ -84,13 +84,14 @@ optional arguments:
 
 
 # todo :
-	
-+ compartment, no E ?	
+
 + save amalgamation
 + more verbose
 + commenting and renaming pass (for upper/intermediate/lower vocab) 
 + test 3 level
 + 3 level rates inference
++ 3 level: P transfer in E computation
++ possibility to match from lower to upper and erwinia example
 
 
 # Some included examples :
@@ -99,11 +100,13 @@ optional arguments:
 		
 		python3 src/main.py "ex_pylori/pylori_species_tree/" "ex_pylori/genes_sub2/"
 		python3 src/main.py "ex_pylori/pop_pylori/" "ex_pylori/genes_sub2/" -mfile "matching_pop_genes"
-		
+
++ ex_pylori 3 level : 
+
+	python3 src/main.py "example_data/ex_pylori/pop_pylori/" "example_data/ex_pylori/genes_sub2/" -nre 0 -mfile example_data/ex_pylori/matching_pop_genes -tl example_data/ex_pylori/upper_level/ -imf example_data/ex_pylori/matching_pop_geo -mp
 		
 + ex_ALE : example given in ALE git (https://github.com/ssolo/ALE), with amalgamation
 	
 + ex_erwinia : example with a matching file for leaves, from Manzano Marin et al. https://doi.org/10.1038/s41396-019-0533-6
 		
 		python3 src/main.py "ex_erwinia/symbiont/" "ex_erwinia/genes/" -mdir "ex_erwinia/lower_matching/"
-

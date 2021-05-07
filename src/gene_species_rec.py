@@ -168,8 +168,8 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                     for cL,cR in clade_frequencies[c]:
                         if P_transfer:
                             for h in P_transfer[e].keys():
-                                b3=np.log(clade_frequencies[c][(cL,cR)])+t_r+np.log(P_transfer[e][h])+P[h][cL]+P[e][cR]
-                                b4=np.log(clade_frequencies[c][(cL,cR)])+t_r+np.log(P_transfer[e][h])+P[h][cR]+P[e][cL]
+                                b3=np.log(clade_frequencies[c][(cL,cR)])+t_r+P_transfer[e][h]+P[h][cL]+P[e][cR]
+                                b4=np.log(clade_frequencies[c][(cL,cR)])+t_r+P_transfer[e][h]+P[h][cR]+P[e][cL]
                                 b_l.append(b3)
                                 b_l.append(b4)
                         else:
@@ -225,8 +225,9 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                     #b+=t_r*sum([P_transfer[e][h]*P_TL[h][c] for h in P_transfer[e].keys()])*E[e]
                     if P_transfer:
                         for h in P_transfer[e].keys():
-                            b1=t_r+np.log(P_transfer[e][h])+P_TL[h][c]+E[e]
-                            b_l.append(b1)
+                            if c in P_TL[h]:
+                                b1=t_r+P_transfer[e][h]+P_TL[h][c]+E[e]
+                                b_l.append(b1)
                     else:
                         b1=t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg_TL[c],correction_ancestrale_TL[e][c])+E[e]
                         b_l.append(b1)
@@ -258,8 +259,9 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                     b_l=[]
                     if P_transfer:
                         for h in P_transfer[e].keys():
-                            b1=t_r+np.log(P_transfer[e][h])+P_TL[h][c]+E[e]
-                            b_l.append(b1)
+                            if c in P_TL[h]:
+                                b1=t_r+P_transfer[e][h]+P_TL[h][c]+E[e]
+                                b_l.append(b1)
                     else:
                         b1=t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+P_avg_TL[c]+E[e]
                         b_l.append(b1)

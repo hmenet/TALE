@@ -228,23 +228,31 @@ def from_rooted_tree_to_clades(tree):
     clade_to_tree=dict()
     c=0
     for e in tree.post_order_traversal():
-        leaves = tuple([u.name for u in e.leaves()].sort())
+        l_tmp=[u.name for u in e.leaves()]
+        l_tmp.sort()
+        leaves = tuple(l_tmp)
         clade_elements[c]=leaves
         clade_keys[leaves]=c
         clade_to_tree[e]=c
         if not e.isRoot():
             p=e.parent
-            pleaves=tuple([u.name for u in p.leaves()].sort())
+            pl_tmp=[u.name for u in p.leaves()]
+            pl_tmp.sort()
+            pleaves=tuple(pl_tmp)
             pc=clade_keys[pleaves]
-            clleaves=tuple([u.name for u in p.left.leaves()].sort())
-            crleaves=tuple([u.name for u in p.right.leaves()].sort())
+            cl_tmp=[u.name for u in p.left.leaves()]
+            cr_tmp=[u.name for u in p.right.leaves()]
+            cl_tmp.sort()
+            cr_tmp.sort()
+            clleaves=tuple(cl_tmp)
+            crleaves=tuple(cr_tmp)
             if clleaves in clade_keys and crleaves in clade_keys:
                 cl=clade_keys[clleaves]
                 cr=clade_keys[crleaves]
                 clade_frequencies[pc]=dict()
                 clade_frequencies[pc][(min(cl,cr), max(cl,cr))]=1
         if e.isLeaf():
-            clade_frequencies[pc]=dict()
+            clade_frequencies[c]=dict()
         c+=1
     clade_post_order=construct_clade_post_order(clade_frequencies, clade_elements)
     return (clade_post_order, clade_frequencies, clade_elements, clade_keys), clade_to_tree

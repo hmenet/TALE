@@ -6,6 +6,9 @@ Created on Thu Jan 16 14:00:16 2020
 @author: hmenet
 """
 
+
+import numpy as np
+
 #####
 ### Compute transfer probabilities of genes between symbionts #####
 #####
@@ -133,7 +136,9 @@ def prob_transfer_sequential(host_info, parasite_post_order):
         P_transfer[p1]=dict()
         for p2 in parasite_post_order:
             if (not p1 == p2) and (not p2.isAscendant(p1)):
-                P_transfer[p1][p2]=sum([sum([P_transfer_h[h1][h2] for h1 in match_hp[p1]])for h2 in match_hp[p2]])
-            else:
-                P_transfer[p1][p2]=0#pas de transfert vers soi même
+                p_transfertmp=sum([sum([P_transfer_h[h1][h2] for h1 in match_hp[p1]])for h2 in match_hp[p2]])
+                if p_transfertmp != 0:
+                    P_transfer[p1][p2]=np.log(p_transfertmp)
+            #else:
+            #    P_transfer[p1][p2]=0#pas de transfert vers soi même
     return P_transfer
