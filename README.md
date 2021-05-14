@@ -22,7 +22,7 @@ Usage:
 	python3 src/main.py [-h] [-mdir MATCHING_DIR] [-mfile MATCHING_FILE] [-o OUTPUT][-of OUTPUT_FREQ] [-ns N_REC_SAMPLE][-nre N_RATES_ESTIMATION_STEPS][-nres N_RATES_ESTIMATION_REC_SAMPLE] [-b][-nrxml N_RECPHYLOXML] [-mp] [-mpf] [-tl THIRD_UPPER_LEVEL][-imd INTER_MATCH_DIR] [-imf INTER_MATCH_FILE] [-v] 
 
 	positional arguments:
-  	upper_dir             directory with newick unrooted files for each lower level tree
+  	upper_dir             directory with newick rooted files for each upper level tree
   	lower_dir             directory with newick unrooted files for each lower level tree, possibility of list of trees to use amalgamation
 
 	optional arguments:
