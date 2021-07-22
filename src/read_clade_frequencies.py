@@ -269,6 +269,21 @@ def compute_clade_frequencies_rooted_tree(l_tree_by_family):
 
 
 
+def clade_to_name(clades_data_list, tree):
+    d=dict()
+    d1=tree.name_to_tree()
+    clade_post_order, clade_frequencies, clade_elements, clade_keys = clades_data_list
+    for c in clade_elements.keys():
+        l_leaves=clade_elements[c]
+        a_leaf=l_leaves[0]
+        d[c]=(d1[a_leaf].n_leaves_ancestor(len(l_leaves))).name
+    return d
+
+def clade_to_name_by_fam(clades_data_list_by_fam, tree_list):
+    d_list=[]
+    for i_clades in range(len(tree_list)):
+        d_list.append(clade_to_name(clades_data_list_by_fam[i_clades], tree_list[i_clades]))
+    return d_list
 
 
 

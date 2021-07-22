@@ -13,7 +13,7 @@ Created on 15/02/2021
 
 @author: hmenet
 """
-from os import walk
+from os import walk, path, makedirs
 
 import time
 
@@ -26,6 +26,7 @@ from arbre import save_tree
 from out_recphyloxml import save_recphyloxml_from_l_event
 from read_input import read_input
 from event_frequency_output import output_frequency_for_all_family
+from read_clade_frequencies import clade_to_name_by_fam
 
 ### arbre espèce raciné, arbre genes non raciné, possibilité de liste d'arbre pour amalgamation, possibilité plusieurs arbres de gènes (plusieurs fichiers pour plusieurs famille de gènes)
 
@@ -63,7 +64,13 @@ parser.add_argument("-imd", "--inter_match_dir", default=None, help="add a direc
 parser.add_argument("-imf", "--inter_match_file", default=None, help="add a file for the upper intermediate matching, same format as for the default levels matchings")
 parser.add_argument("-tlh", "--three_level_heuristic", default="MC", help="heuristic for 3 level rec, can be either dec for decoupled or MC for montecarlo")
 parser.add_argument("-tlMCs", "--three_level_MC_sample", default=10, type=int, help="number of samples of upper intermediate reconciliation for monte carlo heuristic of 3 level reconciliation")
+parser.add_argument("-inre", "--inter_n_rates_estimation_steps", type=int, default=5, help="number of steps in the rates estimation process for the inter upper rec, for each step we compute likelihood of reconciliation and set rates to the observed frequency for each events")
+parser.add_argument("-inres", "--inter_n_rates_estimation_rec_sample", type=int, default=100, help="in the rates estimation process of inter and upper, number of scenarios sampled to estimate event frequencies")
 parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
+parser.add_argument("-dr", "--duplication_rate", default=0.01, type=float, help="initial duplication rate.")
+parser.add_argument("-tr", "--transfer_rate", default=0.01, type=float, help="initial transfer rate.")
+parser.add_argument("-lr", "--loss_rate", default=0.01, type=float, help="initial loss rate.")
+
 args=parser.parse_args()
 
 if args.verbose:
@@ -78,40 +85,102 @@ else:
     rates_inter["T"]=0.05
     rates_inter["D"]=0.05
     rates_inter["L"]=0.05
+
+
+    #test for free living
+
+    name_to_tree=dict()
+    for symbiont in symbiont_list:
+        for u in symbiont.leaves():
+            name_to_tree[u.name]=u
+    for i_clade_inter in range(len(inter_c_match_list)):
+        for c in inter_clades_data_list[i_clade_inter][2].keys():
+            if len(inter_clades_data_list[i_clade_inter][2][c])==1 and not c in inter_c_match_list[i_clade_inter]:
+                own_match=name_to_tree[inter_clades_data_list[i_clade_inter][2][c][0]]
+                symbiont=own_match.root
+                if not symbiont in host_list:
+                    host_list.append(symbiont)
+                inter_c_match_list[i_clade_inter][c]=[own_match]
+
     upper_post_order=[]
     for upper in host_list:
         upper_post_order+=upper.post_order_traversal()
-    upper_input=upper_post_order, inter_clades_data_list, inter_c_match_list, rates_inter, args.three_level_heuristic, inter_clade_to_tree, args.three_level_MC_sample
 
-def rec_and_output(symbiont_list, clades_data_list, c_match_list, gene_file_list, out_file="output/rec", n_sample=1, n_steps=5, n_rec_sample_rates=100, best_rec=False, n_recphyloxml=0, multiprocess=False, multiprocess_fam=False, python_output=False, out_freq_file="output/event_frequency", upper_input=None):
+
+
+    upper_input=upper_post_order, inter_clades_data_list, inter_c_match_list, rates_inter, args.three_level_heuristic, inter_clade_to_tree, args.three_level_MC_sample, host_list, args.inter_n_rates_estimation_steps, args.inter_n_rates_estimation_rec_sample
+
+init_rates=[args.duplication_rate, args.loss_rate, args.transfer_rate]
+
+def rec_and_output(symbiont_list, clades_data_list, c_match_list, gene_file_list, out_file="output/rec", n_sample=1, n_steps=5, n_rec_sample_rates=100, best_rec=False, n_recphyloxml=0, multiprocess=False, multiprocess_fam=False, python_output=False, out_freq_file="output/event_frequency", upper_input=None, init_rates=[0.01,0.01,0.01]):
     parasite_post_order=[]
     for symbiont in symbiont_list:
         parasite_post_order+=symbiont.post_order_traversal()
+
+    if upper_input:
+        upper_post_order, inter_clades_data_list, inter_c_match_list, rates_inter, args.three_level_heuristic, inter_clade_to_tree, args.three_level_MC_sample, host_list, inter_n_steps, inter_n_rec_sample=upper_input
+        init_rates_inter=[rates_inter["D"], rates_inter["L"], rates_inter["T"]]
+        t1=time.perf_counter()
+        rates_inter=gene_rates_ml(upper_post_order,inter_clades_data_list,inter_c_match_list,inter_n_steps,init_rates_g=init_rates_inter, n_rec_sample=inter_n_rec_sample,multi_process=multiprocess, multi_process_family=multiprocess_fam, upper_input=None)
+        cmpt_time=time.perf_counter()-t1
+        print("Upper inter rates estimated in ", cmpt_time, " s")
+        print("Rates", rates_inter)
+        upper_input=upper_post_order, inter_clades_data_list, inter_c_match_list, rates_inter, args.three_level_heuristic, inter_clade_to_tree, args.three_level_MC_sample, host_list
+
+
     t1=time.perf_counter()
-    rates=gene_rates_ml(parasite_post_order,clades_data_list,c_match_list, n_steps, init_rates_g=[0.01,0.01,0.01], n_rec_sample=n_rec_sample_rates, multi_process=multiprocess, multi_process_family=multiprocess_fam)
+    rates=gene_rates_ml(parasite_post_order,clades_data_list,c_match_list, n_steps, init_rates_g=init_rates, n_rec_sample=n_rec_sample_rates, multi_process=multiprocess, multi_process_family=multiprocess_fam, upper_input=upper_input)
     cmpt_time=time.perf_counter()-t1
     print("Rates estimated in ", cmpt_time, " s")
     print("Rates", rates)
+
+
+
     t1=time.perf_counter()
-    out_rec=likelihood,l_event_gene, l_scenarios=reconciliation(parasite_post_order, clades_data_list, c_match_list, rates, sample=n_sample>0, n_sample=n_sample, best=best_rec, n_recphyloxml=n_recphyloxml, multi_process=multiprocess, multi_process_family=multiprocess_fam, upper_input=upper_input)
+    out_rec=reconciliation(parasite_post_order, clades_data_list, c_match_list, rates, sample=n_sample>0, n_sample=n_sample, best=best_rec, n_recphyloxml=n_recphyloxml, multi_process=multiprocess, multi_process_family=multiprocess_fam, upper_input=upper_input)
     if n_sample>0:
-        likelihood,l_event_gene, l_scenarios=out_rec
+        if upper_input != None:
+            likelihood, l_event_gene, l_scenarios, l_scenarios_upper, log_likelihood_list=out_rec
+        else:
+            likelihood,l_event_gene, l_scenarios=out_rec
     else:
         likelihood=out_rec
     cmpt_time=time.perf_counter()-t1
     print("Reconciliation ended in ", cmpt_time, " s")
     print("Log Likelihood: ", likelihood)
     print("Rates: ", rates)
-    for i_recphyloxml in range(min(n_sample, n_recphyloxml)):
-        scenario_by_family=l_scenarios[i_recphyloxml]
-        if best_rec and i_recphyloxml==0:
-            out_file_name=out_file+str(i_recphyloxml)+"_best"+".recphyloxml"
-        else:
-            out_file_name=out_file+str(i_recphyloxml)+".recphyloxml"
-        save_recphyloxml_from_l_event(symbiont_list, scenario_by_family, out_file_name, c_match_list=c_match_list, clade_data_list=clades_data_list, clade=True)
+
+    out_dir1=out_file[:out_file.rfind("/")+1]
+    if not path.isdir(out_dir1):
+        makedirs(out_dir1)
+    out_dir2=out_freq_file[:out_freq_file.rfind("/")+1]
+    if not path.isdir(out_dir2):
+        makedirs(out_dir2)
+
+    if upper_input != None:
+        upper_post_order, inter_clades_data_list,inter_c_match_list, rates_inter, heuristic, inter_clade_to_tree_list, n_sample_MC, host_list=upper_input
+        if heuristic=="dec":
+            n_sample_MC=1
+    else:
+        n_sample_MC=1
+    for upper_rec in range(n_sample_MC):
+        if upper_input != None :
+            out_file_name=out_file+str(upper_rec)+"upper"+".recphyloxml"
+
+            inter_clade_to_name_list=clade_to_name_by_fam(inter_clades_data_list, symbiont_list)
+
+            save_recphyloxml_from_l_event(host_list, l_scenarios_upper[upper_rec], out_file_name, c_match_list=inter_c_match_list, clade_data_list=inter_clades_data_list, clade=True, clade_to_name_list=inter_clade_to_name_list,inter_symbiont_list=symbiont_list)
+
+        for i_recphyloxml in range(min(n_sample, n_recphyloxml)):
+            scenario_by_family=l_scenarios[i_recphyloxml]
+            if best_rec and i_recphyloxml==0:
+                out_file_name=out_file+str(i_recphyloxml)+"_best"+".recphyloxml"
+            else:
+                out_file_name=out_file+str(i_recphyloxml)+".recphyloxml"
+            save_recphyloxml_from_l_event(symbiont_list, scenario_by_family, out_file_name, c_match_list=c_match_list, clade_data_list=clades_data_list, clade=True)
     if n_sample>0:
         output_frequency_for_all_family(l_event_gene, gene_file_list, output_file=out_freq_file)
 
 
-rec_and_output(symbiont_list, clades_data_list, c_match_list, gene_file_list, out_file=args.output, n_sample=args.n_rec_sample, n_steps=args.n_rates_estimation_steps, n_rec_sample_rates=args.n_rates_estimation_rec_sample, best_rec=args.best_rec, n_recphyloxml=args.n_recphyloxml, multiprocess=args.multiprocess, multiprocess_fam=args.multiprocess_fam, out_freq_file=args.output_freq, upper_input=upper_input)
+rec_and_output(symbiont_list, clades_data_list, c_match_list, gene_file_list, out_file=args.output, n_sample=args.n_rec_sample, n_steps=args.n_rates_estimation_steps, n_rec_sample_rates=args.n_rates_estimation_rec_sample, best_rec=args.best_rec, n_recphyloxml=args.n_recphyloxml, multiprocess=args.multiprocess, multiprocess_fam=args.multiprocess_fam, out_freq_file=args.output_freq, upper_input=upper_input, init_rates=init_rates)
 

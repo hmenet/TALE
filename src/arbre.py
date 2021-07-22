@@ -469,8 +469,25 @@ class Tree:
                     else:
                         self.left.prune_tree()
                         self.right.prune_tree()
-
-
+    
+    def name_to_tree(self):
+        d=dict()
+        for u in self.liste():
+            d[u.name]=u
+        return d
+        
+    def n_ancestor(self,n):
+        if n==0:
+            return self
+        else:
+            return self.parent.n_ancestor(n-1)
+        
+    #optimisable
+    def n_leaves_ancestor(self,n):
+        if len(self.leaves())==n:
+            return self
+        else:
+            return (self.parent).n_leaves_ancestor(n)
 
 
 #node1 is ascendant (not strictly) to node 2, we want the distance between them in the tree

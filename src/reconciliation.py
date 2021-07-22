@@ -6,6 +6,8 @@ from gene_sample_rec import sample_gene_upper_rec
 from transfer_prob_pre_process import prob_transfer_sequential
 from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match
 
+from event_frequency_output import output_3level_transfer_info, output_3level_matching_info
+
 #parallel job, if parallelizing on samples
 def job_todo(entry_tuple):
     P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer=entry_tuple
@@ -138,7 +140,7 @@ def two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, s
 def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, upper_input=None, sample=True, n_sample=100, best=False, n_recphyloxml=0, multi_process=False, multi_process_family=False):
 
     if upper_input:
-        upper_post_order, inter_clades_data_list,inter_c_match_list, rates_inter, heuristic, inter_clade_to_tree_list, n_sample_MC=upper_input
+        upper_post_order, inter_clades_data_list,inter_c_match_list, rates_inter, heuristic, inter_clade_to_tree_list, n_sample_MC, host_list=upper_input
 
         if heuristic=="dec":
             best=True
@@ -147,8 +149,7 @@ def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, 
         if heuristic=="MC":
             best=False
             n_sample_inter=n_sample_MC
-
-        log_likelihood, l_event_by_family, l_scenarios_upper, r_list_by_sample= two_level_rec(upper_post_order, inter_clades_data_list, inter_c_match_list,rates_inter, sample=sample, n_sample=n_sample_inter, best=best, n_recphyloxml=1, multi_process=multi_process, multi_process_family=multi_process_family, return_r=True)
+        log_likelihood, l_event_by_family, l_scenarios_upper, r_list_by_sample= two_level_rec(upper_post_order, inter_clades_data_list, inter_c_match_list,rates_inter, sample=True, n_sample=n_sample_inter, best=best, n_recphyloxml=n_sample_inter, multi_process=multi_process, multi_process_family=multi_process_family, return_r=True)
         E,Eavg_no_log=compute_upper_gene_E(upper_post_order, rates_inter)
         E_no_log=dict()
         for h in E:
@@ -157,7 +158,9 @@ def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, 
         log_likelihood_list=[]
         l_scenarios=[]
         l_event_by_family_aggregate=[dict() for i_clade in range(len(clades_data_list))]
+        i_upper_sample=-1
         for r_by_fam in r_list_by_sample:
+            i_upper_sample+=1
             match_hp=dict()
             for i_clade in range(len(r_by_fam)):
                 r=r_by_fam[i_clade]
@@ -172,6 +175,11 @@ def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, 
             P_transfer=prob_transfer_sequential(host_info, parasite_post_order)
             log_l, l_event_by_family, l_scenar = two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family, P_transfer=P_transfer)
             log_likelihood_list.append(log_l)
+
+            output_3level_transfer_info(l_event_by_family,"output/3level_info"+str(i_upper_sample), log_l, match_hp, rates_inter, E, l_scenarios_upper[i_upper_sample])
+            output_3level_matching_info("output/3level_info_match_hp"+str(i_upper_sample), match_hp)
+
+
             l_scenarios+=l_scenar
             for i_clade in range(len(l_event_by_family)):
                 l_event=l_event_by_family[i_clade]
@@ -184,6 +192,6 @@ def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, 
             for event in l_event:
                 l_event[event]/=n_sample_MC
         log_likelihood=log_add_list(log_likelihood_list) - np.log(n_sample_MC)
-        return log_likelihood, l_event_by_family_aggregate, l_scenarios
+        return log_likelihood, l_event_by_family_aggregate, l_scenarios, l_scenarios_upper, log_likelihood_list
     else:
         return two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family)

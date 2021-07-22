@@ -2,6 +2,7 @@
 import random as rd
 import arbre
 import time
+import matplotlib.pyplot as plt
 
 from reconciliation import reconciliation
 from rates_inference import gene_rates_ml
@@ -277,7 +278,9 @@ def matching_lower_to_intermediate(c_match_list, intermediate_list, host_list):
     for intermediate in intermediate_list:
         for u in intermediate.leaves():
             if intermediate in host_list:
-                upper_to_inter[u]=[u]
+                if not u in upper_to_inter:
+                    upper_to_inter[u]=[]
+                upper_to_inter[u].append(u)
             else:
                 if not u.match in upper_to_inter:
                     upper_to_inter[u.match]=[]
@@ -294,6 +297,19 @@ def matching_lower_to_intermediate(c_match_list, intermediate_list, host_list):
                 new_c_match[c]=upper_to_inter[u]
         new_c_match_list.append(new_c_match)
     return new_c_match_list
+
+def prune_some_leaf(intermediate):
+    seen_leaf=[]
+    leaves=intermediate.leaves()
+    rd.shuffle(leaves)
+    for u in leaves:
+        if u.name in seen_leaf:
+            u.time=0.5
+        else:
+            u.time=1
+            seen_leaf.append(u.name)
+    intermediate.prune_tree()
+
 
 ####
 
@@ -335,59 +351,116 @@ def rec(symbiont_list, clades_data_list, c_match_list, n_sample=100, n_steps=5, 
 
 
 
-upper_dir="ex_pylori/pop_pylori_1branch_2comp_same/"
-lower_dir="ex_pylori/genes_sub2/"
-leaf_matching_file="ex_pylori/matching_pop_genes_1branch2comp"
+upper_dir="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/pop_pylori_1branch_2comp_same/"
+lower_dir="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/genes_sub2/"
+leaf_matching_file="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/matching_pop_genes_1branch2comp"
 
 
-upper_dir="ex_pylori/pop_pylori_1branch_2comp/"
-lower_dir="ex_pylori/genes_sub2/"
-leaf_matching_file="ex_pylori/matching_pop_genes_1branch2comp"
+upper_dir="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/pop_pylori_1branch_2comp/"
+lower_dir="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/genes_sub2/"
+leaf_matching_file="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/matching_pop_genes_1branch2comp"
 
 
 
-#upper_dir="ex_pylori/pop_pylori_1branch/"
-#lower_dir="ex_pylori/genes_sub2/"
-#leaf_matching_file="ex_pylori/matching_pop_genes_1branch"
+upper_dir="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/pop_pylori_1branch/"
+lower_dir="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/genes_sub2/"
+lower_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/genes_sub/"
+leaf_matching_file="/home/hmenet/Documents/rewrite_ALE/example_data/ex_pylori/matching_pop_genes_1branch"
 
 n_sample=100
 
 
 symbiont_list, clades_data_list, c_match_list, gene_file_list=read_input(upper_dir, lower_dir, leaf_matching_file=leaf_matching_file)
 
-likelihood, l_event_by_family=rec(symbiont_list, clades_data_list, c_match_list, n_sample=n_sample, n_steps=0, n_rec_sample_rates=n_sample, multiprocess=False, multiprocess_fam=False)
+likelihood, l_event_by_family=rec(symbiont_list, clades_data_list, c_match_list, n_sample=n_sample, n_steps=0, n_rec_sample_rates=n_sample, multiprocess=False, multiprocess_fam=True)
 orig_prob=origination_proba(l_event_by_family)
 freq_by_branch=events_frequencies(l_event_by_family, c_match_list, event_types=["S","T","TL", "SL", "E"])
 for u in freq_by_branch:
     print(u.name, "\n")
     for v in freq_by_branch[u]:
-        print(v, freq_by_branch[u][v])
+        if len(v)>1:
+            print(v[0], v[1].name, freq_by_branch[u][v])
+        else:
+            print(v, freq_by_branch[u][v])
+
     print("\n")
 #for u in freq_by_branch:
 #    print(u.name, u)
 
-n_sample_comp=1
-n_inter=1
+n_sample_comp=100000
+n_inter=2
 best_l=None
 best_intermediate=None
 list_l=[]
 for i_sample in range(n_sample_comp):
     intermediate_list=[]
     total_leaves=0
-    for i_inter in range(n_inter):
-        intermediate=generate_tree(freq_by_branch, orig_prob, plus_S=0.1)
-        #intermediate=generate_tree_SPR2(symbiont_list[0], freq_by_branch, origination_proba, plus_S=1)
-        intermediate_list.append(intermediate)
-        total_leaves+=len(intermediate.leaves())
-        for u in intermediate.leaves():
-            u.name=u.match.name
+
+
+    intermediate=generate_tree(freq_by_branch, orig_prob, plus_S=0.1)
+    #intermediate=generate_tree_SPR2(symbiont_list[0], freq_by_branch, origination_proba, plus_S=1)
+    intermediate_list.append(intermediate)
+    intermediate0=intermediate
+    total_leaves+=len(intermediate.leaves())
+    already_seen=[]
+    for u in intermediate.leaves():
+        u.name=u.match.name
+        if not u.name in already_seen:
+            already_seen.append(u.name)
+    if total_leaves<15 and len(already_seen)==8:
+        prune_some_leaf(intermediate)
+    total_leaves=len(intermediate.leaves())
+    if len(already_seen)==8 and total_leaves==8:
+        good=True
+    else:
+        good=False
+    if good:
+
+
+        intermediate0=symbiont_list[0]
+        for i_sample2 in range(n_sample_comp//5):
+            good=False
+            total_leaves=0
+            intermediate=generate_tree(freq_by_branch, orig_prob, plus_S=0.1)
+            #intermediate=generate_tree_SPR2(symbiont_list[0], freq_by_branch, origination_proba, plus_S=1)
+            total_leaves+=len(intermediate.leaves())
+            already_seen=[]
+            for u in intermediate.leaves():
+                u.name=u.match.name
+                if not u.name in already_seen:
+                    already_seen.append(u.name)
+
+            if total_leaves<15 and len(already_seen)==8:
+                prune_some_leaf(intermediate)
+                print("hey")
+            total_leaves=len(intermediate.leaves())
+
+            if len(already_seen)==8 and total_leaves==8:
+                good=True
+            if good:
+                intermediate_list=[intermediate0, intermediate]
+                #for symbiont in symbiont_list:
+                #    intermediate_list.append(symbiont)
+                new_c_match_list=matching_lower_to_intermediate(c_match_list, intermediate_list, symbiont_list)
+                l=rec(intermediate_list, clades_data_list, new_c_match_list, n_sample=0, n_rec_sample_rates=n_sample, multiprocess=False, multiprocess_fam=True, n_steps=0)
+                list_l.append(l)
+                if best_l==None or l>best_l:
+                    best_l=l
+                    best_intermediate=intermediate_list
+        print("\none done\n")
+    if i_sample%1000 == 0:
+        print(i_sample, "/", n_sample_comp)
+
+
+
+""""
     #print(test_number_leaf(c_match_list, intermediate_list))
-    intermediate_list=list(symbiont_list)
-    #for symbiont in symbiont_list:
-    #    intermediate_list.append(symbiont)
+    #intermediate_list=list(symbiont_list)
+    for symbiont in symbiont_list:
+        intermediate_list.append(symbiont)
 
     #if test_number_leaf(c_match_list, intermediate_list) and len(intermediate_list[0].leaves()) in  [7,8,9,10,11,12] and len(intermediate_list[1].leaves()) in  [7,8,9,10,11,12]:
-    if True or total_leaves==8:
+    if total_leaves==n_inter*8 and good:
         new_c_match_list=matching_lower_to_intermediate(c_match_list, intermediate_list, symbiont_list)
         print("hey", total_leaves)
         l=rec(intermediate_list, clades_data_list, new_c_match_list, n_sample=0, n_rec_sample_rates=n_sample, multiprocess=False, multiprocess_fam=True, n_steps=0)
@@ -398,14 +471,16 @@ for i_sample in range(n_sample_comp):
             best_intermediate=intermediate_list
     if i_sample%1000 == 0:
         print(i_sample, "/", n_sample_comp)
-
+"""
 
 
 
 print(len(list_l))
 print(best_l)
-save_tree(best_intermediate[0], "output/intermediate0")
-save_tree(best_intermediate[1], "output/intermediate1")
+plt.hist(list_l)
+plt.show()
+save_tree(best_intermediate[0], "/home/hmenet/Documents/rewrite_ALE/output/intermediate0")
+save_tree(best_intermediate[1], "/home/hmenet/Documents/rewrite_ALE/output/intermediate1")
 
 ### script to create matching file for pylori
 
