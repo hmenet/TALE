@@ -156,6 +156,7 @@ def all_name_matching_to_tree_matching_onedict(symbiont_list, clades_data_list, 
 def rename_tree(tree,root_name):
     def aux_rename_tree(tree, root_name, n):
         if not tree.isLeaf():
+            #if tree.name == None:
             tree.name=root_name+str(n)
             n+=1
             n=aux_rename_tree(tree.left, root_name,n)

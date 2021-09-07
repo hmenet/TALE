@@ -33,7 +33,7 @@ def count_events(l_event, min_rate=0.0001):
 
 
 #version pour chercher maximum likelihood comme dans ALE ou Corepa
-def gene_rates_ml(parasite_post_order,clades_data_list,c_match_list, n_steps, init_rates_g=[0.01,0.01,0.01], n_rec_sample=100, multi_process=False, multi_process_family=False, upper_input=None):
+def gene_rates_ml(parasite_post_order,clades_data_list,c_match_list, n_steps, init_rates_g=[0.01,0.01,0.01], n_rec_sample=100, multi_process=False, multi_process_family=False, upper_input=None,ncpu=4):
 
     rates_g=dict()
     rates_g["D"]=init_rates_g[0]
@@ -42,7 +42,7 @@ def gene_rates_ml(parasite_post_order,clades_data_list,c_match_list, n_steps, in
 
     i_steps=0
     while i_steps < n_steps :
-        output_table=reconciliation(parasite_post_order, clades_data_list, c_match_list, rates_g,sample=True, n_sample=n_rec_sample, multi_process=multi_process, multi_process_family=multi_process_family,upper_input=upper_input)
+        output_table=reconciliation(parasite_post_order, clades_data_list, c_match_list, rates_g,sample=True, n_sample=n_rec_sample, multi_process=multi_process, multi_process_family=multi_process_family,upper_input=upper_input,ncpu=ncpu,less_output=True)
         likelihood=output_table[0]
         l_event_gene=output_table[1]
         rates_g=count_events(l_event_gene)

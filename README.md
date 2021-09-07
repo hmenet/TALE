@@ -123,8 +123,8 @@ Usage:
 
 # todo :
 
-
-
++ possibility for null transfer rate
++ what happen if rooted gene tree
 + output file names
 + possibility to match from lower to upper and erwinia example -> to test
 + save amalgamation

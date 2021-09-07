@@ -37,15 +37,39 @@ def read_output_files(directory):
         l_events_by_fam.append(l_events)
     return l_events_aggregate, l_events_by_fam
 
+def read_output_file_list(liste_fichiers):
+    l_events_aggregate=dict()
+    l_events_by_fam=[]
+    for file_name in liste_fichiers:
+        l_events=dict()
+        f=open(file_name, "r")
+        s=f.read()
+        f.close()
+        list_events=s.split(sep="\n")
+        seen_events=dict()
+        for u in list_events:
+            v=u.split(sep="\t")
+            event=tuple(v[:-1])
+            if len(event)>0:
+                if not event[0] in seen_events:
+                    seen_events[event[0]]=1
+                else:
+                    event_freq=float(v[-1])
+                    l_events_aggregate.setdefault(event,0)
+                    l_events.setdefault(event,0)
+                    l_events_aggregate[event]+=event_freq
+                    l_events[event]+=event_freq
+        l_events_by_fam.append(l_events)
+    return l_events_aggregate, l_events_by_fam
 
 
 
 
-path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/events_by_gene/"
+#path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/events_by_gene/"
 
-l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
+#l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
 
-path_file_match_hp="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/3level_info0_hp"
+#path_file_match_hp="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/3level_info0_hp"
 
 def read_output_match_hp(match_hp_file):
     f=open(match_hp_file)
@@ -60,7 +84,7 @@ def read_output_match_hp(match_hp_file):
             match_hp[v[0]].append(v[1])
     return match_hp
 
-match_hp=read_output_match_hp(path_file_match_hp)
+#match_hp=read_output_match_hp(path_file_match_hp)
 
 def transfer_frequency_only_ext(l_event, match_hp, output_file):
 
@@ -164,10 +188,152 @@ def transfer_direction(l_event_by_family, match_hp):
 
     return l_delta_transfer
 
-l_delta_transfer=transfer_direction(l_events_by_fam, match_hp)
+#l_delta_transfer=transfer_direction(l_events_by_fam, match_hp)
 
-l=l_delta_transfer["hpAfrica1"]["hpEurope"]
-plt.figure()
-plt.hist(l)
-plt.title("hpAfrica1(-> - <-)hpEurope dist")
-plt.show()
+#l=l_delta_transfer["hpAfrica1"]["hpEurope"]
+#plt.figure()
+#plt.hist(l)
+#plt.title("hpAfrica1(-> - <-)hpEurope dist")
+#plt.show()
+
+
+
+
+
+def count_transfer(l_events_by_fam):
+    n_transfer=0
+    for l_event in l_events_by_fam:
+        for u in l_event:
+            if l_event[u]>0.02:
+                if "T" in u[0]:
+                    n_transfer+=l_event[u]
+    return n_transfer
+
+
+#path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/non_constrained_species/genes_events/"
+#path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/events_by_gene/"
+
+#l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
+
+
+#path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/16_genes/non_constrained/gene_events/"
+#path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/16_genes/constrained/gene_events/"
+
+#l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
+
+
+def count_loss(l_events_by_fam):
+    n_transfer=0
+    for l_event in l_events_by_fam:
+        for u in l_event:
+            if l_event[u]>0.02:
+                if "L" in u[0]:
+                    n_transfer+=l_event[u]
+    return n_transfer
+
+def count_dup(l_events_by_fam):
+    n_transfer=0
+    for l_event in l_events_by_fam:
+        for u in l_event:
+            if l_event[u]>0.02:
+                if "D" in u[0]:
+                    n_transfer+=l_event[u]
+    return n_transfer
+
+def count_s(l_events_by_fam):
+    n_transfer=0
+    for l_event in l_events_by_fam:
+        for u in l_event:
+            if l_event[u]>0.02:
+                if "S" in u[0]:
+                    n_transfer+=l_event[u]
+    return n_transfer
+
+"""
+dr=0.0035
+tr=0.35
+lr=0.32
+tri=0.35*0.025*0.0007/40
+
+tintra1=545
+tinter1=362
+l1=1300
+d1=16
+import numpy as np
+
+print(np.log(tr)*tintra1+np.log(tri)*tinter1+np.log(lr)*l1+np.log(dr)*d1)
+
+tintra1=550
+tinter1=452
+l1=1600
+d1=9
+tri=0.35*0.025*0.0007/40
+print(np.log(tr)*tintra1+np.log(tri)*tinter1+np.log(lr)*l1+np.log(dr)*d1)
+
+path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/verif/006_non_constrained/gene_events/"
+l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
+
+lenc = l_events_by_fam[0]
+
+print(construct_file_list(path_dir)[0])
+
+path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/verif/006_constrained/gene_events/"
+l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
+
+lec = l_events_by_fam[0]
+
+print("constrained",count_transfer([lec]),count_dup([lec]), count_loss([lec]),count_s([lec]))
+print("non constrained",count_transfer([lenc]),count_dup([lenc]), count_loss([lenc]),count_s([lenc]))
+
+le=lenc
+for u in le:
+    if le[u]>0.5 and "T"in u[0]:
+        print(u, le[u])
+
+path_file_match_hp="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/verif/006_constrained/3level_info_match_hp0"
+match_hpc=read_output_match_hp(path_file_match_hp)
+
+path_file_match_hpnc="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/verif/006_non_constrained/3level_info_match_hp0"
+match_hpnc=read_output_match_hp(path_file_match_hpnc)
+
+
+le=lec
+match_hp=match_hpc
+for u in le:
+    if le[u]>0.1 and "T"in u[0]:
+        if match_hp[u[1]] != match_hp[u[2]]:
+            print(u, le[u], match_hp[u[1]],match_hp[u[2]])
+
+def count_inter_transfer(l_events_by_fam, match_hp):
+    n_transfer=0
+    for l_event in l_events_by_fam:
+        for u in l_event:
+            if l_event[u]>0.02:
+                if "T" in u[0]:
+                    if match_hp[u[1]] != match_hp[u[2]]:
+                        n_transfer+=l_event[u]
+    return n_transfer
+
+print(count_inter_transfer([lec],match_hpc), count_transfer([lec]))
+print(count_inter_transfer([lenc],match_hpnc), count_transfer([lenc]))
+
+for i in range(16):
+
+    path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/16_genes/constrained/gene_events/"
+
+    l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
+
+    path_file_match_hp="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/16_genes/constrained/3level_info_match_hp0"
+    match_hp=read_output_match_hp(path_file_match_hp)
+
+    print("contraint",count_inter_transfer([l_events_by_fam[i]],match_hp), count_transfer([l_events_by_fam[i]]))
+
+    path_dir="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/16_genes/non_constrained/gene_events/"
+
+    l_event_aggregate,l_events_by_fam=read_output_files(path_dir)
+
+    path_file_match_hp="/home/hmenet/Documents/Stage_M2/These/script/h_pylori/test_010721/resultats/16_genes/non_constrained/3level_info_match_hp0"
+    match_hp=read_output_match_hp(path_file_match_hp)
+
+    print("non contraint",count_inter_transfer([l_events_by_fam[i]],match_hp), count_transfer([l_events_by_fam[i]]), "\n")
+"""

@@ -10,7 +10,7 @@ from event_frequency_output import output_3level_transfer_info, output_3level_ma
 
 #parallel job, if parallelizing on samples
 def job_todo(entry_tuple):
-    P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer=entry_tuple
+    P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer,ncpu=entry_tuple
     if i==0:
         best_here=best
     else:
@@ -19,7 +19,7 @@ def job_todo(entry_tuple):
 
 #if parallelizing on gene family
 def family_job(entry_tuple):
-    parasite_post_order,E, Eavg_no_log, clades_data, rates_g, c_match_list_i_clade, best, multi_process, multi_process_family, sample, n_sample, return_r, P_transfer = entry_tuple
+    parasite_post_order,E, Eavg_no_log, clades_data, rates_g, c_match_list_i_clade, best, multi_process, multi_process_family, sample, n_sample, return_r, P_transfer,ncpu = entry_tuple
     P,P_TL, log_l,corr_size=compute_upper_gene_P(parasite_post_order,E, Eavg_no_log, clades_data, rates_g, c_match_list_i_clade,more_output=True, P_transfer=P_transfer)
     if sample :
         l_events_list=[]
@@ -35,9 +35,9 @@ def family_job(entry_tuple):
                 l_events_list.append(list(l_events_tmp))
                 list_r.append(r_tmp)
         else:
-            job_list=[(P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer) for i in range(n_sample)]
+            job_list=[(P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer,ncpu) for i in range(n_sample)]
             #parallel version only if not already parrallel by family
-            with mp.Pool(mp.cpu_count()) as pool:
+            with mp.Pool(ncpu) as pool:
                 output_tmp=pool.map(job_todo, job_list)
                 for le, r in output_tmp:
                     l_events_list.append(le)
@@ -51,7 +51,7 @@ def family_job(entry_tuple):
         return log_l
 
 
-def two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=True, n_sample=100, best=False, n_recphyloxml=0, multi_process=False, multi_process_family=False, return_r=False, P_transfer=None):
+def two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=True, n_sample=100, best=False, n_recphyloxml=0, multi_process=False, multi_process_family=False, return_r=False, P_transfer=None,ncpu=4):
     if return_r:
         r_list_by_family=[]
     if sample:
@@ -62,12 +62,12 @@ def two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, s
 
     E,Eavg_no_log=compute_upper_gene_E(parasite_post_order, rates_g)
 
-    job_fam_list=[(parasite_post_order,E, Eavg_no_log, clades_data_list[i_clade], rates_g, c_match_list[i_clade], best, multi_process, multi_process_family, sample, n_sample, return_r, P_transfer) for i_clade in range(len(clades_data_list))]
+    job_fam_list=[(parasite_post_order,E, Eavg_no_log, clades_data_list[i_clade], rates_g, c_match_list[i_clade], best, multi_process, multi_process_family, sample, n_sample, return_r, P_transfer,ncpu) for i_clade in range(len(clades_data_list))]
     #map output is an iterable map object
     if not multi_process_family:
         fam_output=map(family_job, job_fam_list)
     else:
-        with mp.Pool(mp.cpu_count()) as pool:
+        with mp.Pool(ncpu) as pool:
             fam_output=pool.map(family_job, job_fam_list)
 
     if sample:
@@ -137,19 +137,19 @@ def two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, s
         return log_likelihood
 
 
-def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, upper_input=None, sample=True, n_sample=100, best=False, n_recphyloxml=0, multi_process=False, multi_process_family=False):
+def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, upper_input=None, sample=True, n_sample=100, best=False, n_recphyloxml=0, multi_process=False, multi_process_family=False,ncpu=4, less_output=False):
 
     if upper_input:
         upper_post_order, inter_clades_data_list,inter_c_match_list, rates_inter, heuristic, inter_clade_to_tree_list, n_sample_MC, host_list=upper_input
 
-        if heuristic=="dec":
+        if heuristic in ["dec","dec_no_ghost"]:
             best=True
             n_sample_inter=1
             n_sample_MC=1
         if heuristic=="MC":
             best=False
             n_sample_inter=n_sample_MC
-        log_likelihood, l_event_by_family, l_scenarios_upper, r_list_by_sample= two_level_rec(upper_post_order, inter_clades_data_list, inter_c_match_list,rates_inter, sample=True, n_sample=n_sample_inter, best=best, n_recphyloxml=n_sample_inter, multi_process=multi_process, multi_process_family=multi_process_family, return_r=True)
+        log_likelihood, l_event_by_family, l_scenarios_upper, r_list_by_sample= two_level_rec(upper_post_order, inter_clades_data_list, inter_c_match_list,rates_inter, sample=True, n_sample=n_sample_inter, best=best, n_recphyloxml=n_sample_inter, multi_process=multi_process, multi_process_family=multi_process_family, return_r=True,ncpu=ncpu)
         E,Eavg_no_log=compute_upper_gene_E(upper_post_order, rates_inter)
         E_no_log=dict()
         for h in E:
@@ -170,14 +170,15 @@ def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, 
                     clade_to_tree_rev[clade_to_tree[tree]]=tree
                 for c in r:
                     match_hp[clade_to_tree_rev[c]]=r[c]
-            host_info=upper_post_order, rates_inter,match_hp, E_no_log
+            host_info=upper_post_order, rates_inter,match_hp, E_no_log,heuristic
 
             P_transfer=prob_transfer_sequential(host_info, parasite_post_order)
-            log_l, l_event_by_family, l_scenar = two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family, P_transfer=P_transfer)
+            log_l, l_event_by_family, l_scenar = two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family, P_transfer=P_transfer,ncpu=ncpu)
             log_likelihood_list.append(log_l)
 
-            output_3level_transfer_info(l_event_by_family,"output/3level_info"+str(i_upper_sample), log_l, match_hp, rates_inter, E, l_scenarios_upper[i_upper_sample])
-            output_3level_matching_info("output/3level_info_match_hp"+str(i_upper_sample), match_hp)
+            if not less_output:
+                output_3level_transfer_info(l_event_by_family,"output/3level_info"+str(i_upper_sample), log_l, match_hp, rates_inter, E, l_scenarios_upper[i_upper_sample])
+                output_3level_matching_info("output/3level_info_match_hp"+str(i_upper_sample), match_hp)
 
 
             l_scenarios+=l_scenar
@@ -189,9 +190,9 @@ def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, 
                     l_event_aggregate[event]+=l_event[event]
         for i_clade in range(len(l_event_by_family_aggregate)):
             l_event_aggregate=l_event_by_family_aggregate[i_clade]
-            for event in l_event:
-                l_event[event]/=n_sample_MC
+            for event in l_event_aggregate:
+                l_event_aggregate[event]/=n_sample_MC
         log_likelihood=log_add_list(log_likelihood_list) - np.log(n_sample_MC)
         return log_likelihood, l_event_by_family_aggregate, l_scenarios, l_scenarios_upper, log_likelihood_list
     else:
-        return two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family)
+        return two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family,ncpu=ncpu)

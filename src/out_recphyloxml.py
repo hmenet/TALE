@@ -44,7 +44,6 @@ def from_l_e_to_recphylo(l_e, leaf_matching, symbiont=None, clade=False,clade_el
         for symbiont in inter_symbiont_list:
             for u in symbiont.liste():
                 name_to_tree_inter[u.name]=u
-        print(name_to_tree_inter)
     t_root=arbre.Tree()
     if clade:
         t_root.name="0"
@@ -114,7 +113,8 @@ def from_l_e_to_recphylo(l_e, leaf_matching, symbiont=None, clade=False,clade_el
                 rename=rename[:-2]
             #rename=leaf.name.split(sep=".")[0]
             if (not inter_symbiont_list==None) and leaf_matching[rename] in name_to_tree_inter :
-                print(rename,leaf_matching[rename])
+                print("there !!!", leaf_matching[rename])
+                print("here !!!", name_to_tree_inter)
                 d_events[leaf.name].append(["leaf","FREE_LIVING"])
             else:
                 d_events[leaf.name].append(["leaf",leaf_matching[rename]])
@@ -229,6 +229,8 @@ def save_recphyloxml_from_l_event(host_list, l_event_by_family, file,symbiont_li
         host=host_list[0]
     gene_list=[]
     d_list=[]
+
+    print(c_match_list)
     for i_family in range(len(l_event_by_family)):
         l_event=l_event_by_family[i_family]
         if leaf_matching_list == None:
@@ -249,7 +251,7 @@ def save_recphyloxml_from_l_event(host_list, l_event_by_family, file,symbiont_li
                 clade_elements=clade_data_list[i_family][2]
             else:
                 symbiont=symbiont_list[i_family]
-
+        print(leaf_matching)
         if clade:
             d,t=from_l_e_to_recphylo(l_event, leaf_matching,symbiont=None, clade_elements=clade_elements, clade=True,inter_symbiont_list=inter_symbiont_list)
         else:

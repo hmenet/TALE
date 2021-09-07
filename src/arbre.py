@@ -661,7 +661,6 @@ def read_tree_string_sagephy(s):
     k=0
     while k < len(s):
         c=s[k]
-        print(c)
         if c=="(":
             node.left=Tree()
             node.left.parent=node
