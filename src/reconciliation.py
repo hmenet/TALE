@@ -136,21 +136,22 @@ def two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, s
     else:
         return log_likelihood
 
+#rec is a rec_problem instance, and rate inference is True if called during rate inference
+def reconciliation(rec, rate_inference=False):
 
-def reconciliation(parasite_post_order, clades_data_list, c_match_list,rates_g, upper_input=None, sample=True, n_sample=100, best=False, n_recphyloxml=0, multi_process=False, multi_process_family=False,ncpu=4, less_output=False):
-
-    if upper_input:
-        upper_post_order, inter_clades_data_list,inter_c_match_list, rates_inter, heuristic, inter_clade_to_tree_list, n_sample_MC, host_list=upper_input
-
-        if heuristic in ["dec","dec_no_ghost"]:
+    if rec.third_level:
+        if rec.heuristic in ["dec","dec_no_ghost"]:
             best=True
             n_sample_inter=1
             n_sample_MC=1
-        if heuristic=="MC":
+        if rec.heuristic=="MC":
             best=False
-            n_sample_inter=n_sample_MC
-        log_likelihood, l_event_by_family, l_scenarios_upper, r_list_by_sample= two_level_rec(upper_post_order, inter_clades_data_list, inter_c_match_list,rates_inter, sample=True, n_sample=n_sample_inter, best=best, n_recphyloxml=n_sample_inter, multi_process=multi_process, multi_process_family=multi_process_family, return_r=True,ncpu=ncpu)
-        E,Eavg_no_log=compute_upper_gene_E(upper_post_order, rates_inter)
+            n_sample_inter=rec.n_sample_mc
+
+        upper_rec_sol= two_level_rec(rec.upper_rec, n_sample=n_sample_inter, best=best, n_recphyloxml=n_sample_inter, return_r=True)
+
+
+        E,Eavg_no_log=compute_upper_gene_E(rec.upper_rec)
         E_no_log=dict()
         for h in E:
             E_no_log[h]=np.exp(E[h])

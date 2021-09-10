@@ -22,14 +22,16 @@ def solution_polynome_snd(a,b,c):
 
 
 #pareil que TL_compute_parasite_E_5_order mais peut prendre une lsite de parasite en entrée en donnant la concatenation des post order de ces parasites
-def compute_upper_gene_E(upper_post_order, rates, P_transfer=None):
-    d_r= rates["D"]
-    l_r= rates["L"]
-    t_r= rates["T"]
-    s_r=1-d_r-l_r-t_r
+def compute_upper_gene_E(rec_upper, P_transfer=None):
+    d_r= rec_upper.rates.dr
+    l_r= rec_upper.rates.lr
+    t_r= rec_upper.rates.tr
+    rec_upper.rates.reinit()
+    s_r=rec_upper.rates.sr
     E=dict()
-    queue=list(upper_post_order)
+    queue=list(rec_upper.upper.post_order)
     Eavg=dict()
+    upper_post_order=rec_upper.upper.post_order
     for h in upper_post_order:
         tmp=l_r
         tmp+=d_r*l_r*l_r
@@ -56,19 +58,20 @@ def compute_upper_gene_E(upper_post_order, rates, P_transfer=None):
     Eavg_no_log=(-1)/len(upper_post_order)*sum([t_r*E[h] for h in upper_post_order])
     for h in E.keys():
         E[h]=np.log(E[h])
-
     return E, Eavg_no_log
 
 
 #proba de transfert pre processed, dans P_transfer[e][e2] de e vers e2
 #c_match = clade_to_matched_node
-def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_match, more_output=False, P_transfer=None):
-    mult_gene_match=is_mult_match(c_match)
-    d_r= np.log(rates["D"])
-    l_r= np.log(rates["L"])
-    t_r= np.log(rates["T"])
-    s_r=np.log(1-rates["D"]-rates["L"]-rates["T"])
-    clade_post_order, clade_frequencies, clade_elements, clade_keys=clades_data
+def compute_upper_gene_P(rec_problem,E, Eavg_no_log, am_tree, more_output=False, P_transfer=None):
+    mult_gene_match=is_mult_match(am_tree)
+    rec_problem.rates.reinit()
+    d_r= rec_problem.rates.ldr
+    l_r= rec_problem.rates.llr
+    t_r= rec_problem.rates.ltr
+    s_r= rec_problem.rates.lsr
+    upper_post_order=rec_problem.upper.post_order
+
     P=dict()
     P_TL=dict()
     P_avg=dict()
@@ -90,27 +93,17 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                 correction_ancestrale_size[e]=correction_ancestrale_size[e.parent]
 
     if not mult_gene_match:
-        for c in c_match:
-            #print(c, c_match[c].root.name, c_match[c].root)
-            P[c_match[c]][c]=0
-            P_TL[c_match[c]][c]=0
+        for c in am_tree.leaves:
+            P[c.match][c]=0
+            P_TL[c.match][c]=0
     else:
-        for c in c_match:
+        for c in am_tree.leaves:
             #c_match[c] si mult match c'est une liste
-            for species_tmp in c_match[c]:
-                P[species_tmp][c]=(-1)*np.log(len(c_match[c]))
-                P_TL[species_tmp][c]=(-1)*np.log(len(c_match[c]))
-    clade_queue=list(clade_post_order)
+            for species_tmp in c.match:
+                P[species_tmp][c]=(-1)*np.log(len(c.match))
+                P_TL[species_tmp][c]=(-1)*np.log(len(c.match))
 
-
-    #for c in clade_post_order:
-    #    for e in P.keys():
-    #        if not c in P[e]:
-    #            P[e][c]=0
-    #for c in clade_post_order:
-    #    for u in clades_data[2][c]:
-    #        if sum([P[e][clades_data[3][tuple([u])]] for e in P.keys()]) != 1 :
-    #            print("hey",u,clades_data[3][tuple([u])], sum([P[e][clades_data[3][tuple([u])]] for e in P.keys()]))
+    clade_queue=list(am_tree.reverse_post_order)
 
     while len(clade_queue)>0:
         c=clade_queue.pop()
@@ -119,12 +112,15 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
         b_store=dict()
         while len(upper_queue)>0:
             e=upper_queue.pop()
+
+            ##### calculer les e où c peut aller en TL à l’avance pour ne pas parcourir tant de liste ....
+
             if not mult_gene_match:
-                bool_continue_mult_match=not (c in c_match.keys() and c_match[c]==e)
-                bool_continue_mult_match2=not(c in c_match.keys()) or (c_match[c] in e.leaves())
+                bool_continue_mult_match=not (c.match==e)
+                bool_continue_mult_match2=not(c in c_match.keys()) or (c.match in e.leaves())
             else:
                 bool_continue_mult_match=not (c in c_match.keys() and e in c_match[c])
-                bool_continue_mult_match2=not(c in c_match.keys()) or (inter_list(c_match[c],e.leaves()))
+                bool_continue_mult_match2=not(c in c_match.keys()) or (inter_list(c.match,e.leaves()))
             if bool_continue_mult_match:
                 if bool_continue_mult_match2:
                     #a=1

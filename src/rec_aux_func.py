@@ -24,8 +24,8 @@ def log_add_list(l):
 
 
 #to check if leaves have multiple matches
-def is_mult_match(c_match):
-    return type(next(iter(c_match.values()))) == list
+def is_mult_match(am_tree):
+    return type(am_tree.leaves[0].match) == list
 #next return the next element of an iterator
 #iter enable dict, that is iterable, to have a next function, so O(1).
 

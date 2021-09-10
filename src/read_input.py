@@ -37,7 +37,7 @@ def construct_tree_list(directory, amalgamation=False):
     return tree_list, tree_file_list
 
 ##  input matching dir or file
-#return a  dict matching inner leaves to host leaves
+#return a  dict matching lower leaves to host leaves
 
 #voir selon ce qu'on veut en faire apres
 def construct_leaves_matching(matching_file):
@@ -80,11 +80,11 @@ def construct_name_to_leaves(tree):
         d[u.name]=u
     return d
 
-def construct_name_to_clade(clade_keys):
+def construct_name_to_clade(am_tree):
     d=dict()
-    for u in clade_keys:
-        if len(u)==1:
-            d[u[0]]=clade_keys[u]
+    for u in am_tree.reverse_post_order:
+        if u.is_leaf:
+            d[u.clade_leaves[0]]=u
     return d
 
 #à chaque nom d'arbre renvoie l'arbre corrspondant
@@ -95,57 +95,46 @@ def construct_name_to_tree(tree_list):
     return d
 
 #always mult match output
-def name_matching_to_tree_matching(name_to_node_host, name_to_node_inner,leaf_matching, tree=False):
-    if not tree:
-        d=dict()
-    for inner_node_name in leaf_matching:
-        if inner_node_name in name_to_node_inner : #sinon la feuille a été pruned de l'arbre
-            inner_node=name_to_node_inner[inner_node_name]
-            for host_info in leaf_matching[inner_node_name]:
+def name_matching_to_tree_matching(name_to_node_host, name_to_node_lower,leaf_matching, tree=False):
+    for lower_node_name in leaf_matching:
+        if lower_node_name in name_to_node_lower : #sinon la feuille a été pruned de l'arbre
+            lower_node=name_to_node_lower[lower_node_name]
+            for host_info in leaf_matching[lower_node_name]:
                 if len(host_info)==2:
                     host_node_name,host_tree_name=host_info
                     host_node=name_to_node_host[host_tree_name][host_node_name]
-                    if tree:
-                        inner_node.match=host_node
-                    else:
-                        if not inner_node in d:
-                            d[inner_node]=[]
-                        d[inner_node].append(host_node)
                 else:
                     host_node_name=host_info
                     host_node=name_to_node_host[host_node_name]
-                    inner_node.match=host_node
-    if not tree:
-        return d
+                if tree:
+                    lower_node.match=host_node
+                else:
+                    if lower_node.match is None:
+                        lower_node.match=[]
+                    lower_node.match.append(host_node)
 
 
 
-def all_name_matching_to_tree_matching(symbiont_list, clades_data_list, leaf_matching_list):
-    c_match_list=[]
+def all_name_matching_to_tree_matching(symbiont_list, am_tree_list, leaf_matching_list):
     name_to_node_symbionts=dict()
     #ajouter un test pour savoir quel format est leaf matching list, arbre + feuille ou juste feuille ?
     for symbiont in symbiont_list:
         name_to_node_symbionts[symbiont.tree_name]=construct_name_to_leaves(symbiont)
-    for clade_id in range(len(clades_data_list)):
-        clade_keys=clades_data_list[clade_id][3]
+    for clade_id in range(len(am_tree_list)):
+        am_tree=am_tree_list[clade_id]
         lower_leaf_matching=leaf_matching_list[clade_id]
-        name_to_node_inner=construct_name_to_clade(clade_keys)
-        d=name_matching_to_tree_matching(name_to_node_symbionts, name_to_node_inner, lower_leaf_matching)
-        c_match_list.append(d)
-    return c_match_list
+        name_to_node_lower=construct_name_to_clade(am_tree)
+        name_matching_to_tree_matching(name_to_node_symbionts, name_to_node_lower, lower_leaf_matching)
 
 #only one dict for all lower trees
-def all_name_matching_to_tree_matching_onedict(symbiont_list, clades_data_list, lower_leaf_matching):
-    c_match_list=[]
+def all_name_matching_to_tree_matching_onedict(symbiont_list, am_tree_list, lower_leaf_matching):
     name_to_node_symbionts=dict()
     for symbiont in symbiont_list:
         name_to_node_symbionts[symbiont.tree_name]=construct_name_to_leaves(symbiont)
-    for clade_id in range(len(clades_data_list)):
-        clade_keys=clades_data_list[clade_id][3]
-        name_to_node_inner=construct_name_to_clade(clade_keys)
-        d=name_matching_to_tree_matching(name_to_node_symbionts, name_to_node_inner, lower_leaf_matching)
-        c_match_list.append(d)
-    return c_match_list
+    for clade_id in range(len(am_tree_list)):
+        am_tree=am_tree_list[clade_id]
+        name_to_node_lower=construct_name_to_clade(am_tree)
+        name_matching_to_tree_matching(name_to_node_symbionts, name_to_node_lower, lower_leaf_matching)
 
 
 #################################
@@ -178,86 +167,50 @@ def read_input_2levels(symbiont_directory, gene_directory=None, leaf_matching_di
         i+=1
     if inter:
         #non destructive construction of clades data list format for a rooted binary tree
-        clades_data_list, clade_to_tree=compute_clade_frequencies_rooted_tree(inter_list)
+        am_tree_list=compute_clade_frequencies_rooted_tree(inter_list)
     else:
-        clades_data_list= compute_clade_frequencies_multiple_families(gene_list)
-    if leaf_matching_directory != None:
+        am_tree_list= compute_clade_frequencies_multiple_families(gene_list)
+    if not leaf_matching_directory is None:
         leaf_matching_list=construct_leaves_matching_dir(leaf_matching_directory,gene_file_list)
-        c_match_list=all_name_matching_to_tree_matching(symbiont_list,clades_data_list, leaf_matching_list)
+        all_name_matching_to_tree_matching(symbiont_list,am_tree_list, leaf_matching_list)
     else:
-        if leaf_matching_file != None:
+        if not leaf_matching_file is None:
             leaf_matching=construct_leaves_matching(leaf_matching_file)
-            c_match_list=all_name_matching_to_tree_matching_onedict(symbiont_list,clades_data_list, leaf_matching)
+            all_name_matching_to_tree_matching_onedict(symbiont_list,am_tree_list, leaf_matching)
         else:
             symbiont_name_to_tree=dict()
             for symbiont in symbiont_list:
                 for u in symbiont.leaves():
-                    symbiont_name_to_tree[u.name]=u
-            c_match_list=[]
-            for i_clade in range(len(clades_data_list)):
-                d=dict()
-                for u in clades_data_list[i_clade][0]:
-                    v=clades_data_list[i_clade][2][u]
-                    if len(v)==1:
-                        d[u]=symbiont_name_to_tree[v[0]]
-                c_match_list.append(d)
-    if inter:
-        return symbiont_list, clades_data_list, c_match_list, gene_file_list, clade_to_tree
-    else:
-        return symbiont_list, clades_data_list, c_match_list, gene_file_list, symbiont_file_list
+                    if not u.name in symbiont_name_to_tree:
+                        symbiont_name_to_tree[u.name]=[]
+                    symbiont_name_to_tree[u.name].append[u]
+            for i_clade in range(len(am_tree_list)):
+                for u in am_tree_list[i_clade].reverse_post_order:
+                    if u.is_leaf():
+                        u.match=symbiont_name_to_tree[u.clade_leaves[0]]
+    for i_clade in am_tree_list:
+        am_tree_list[i_clade].tree_name=gene_file_list[i_clade]
+    return symbiont_list, am_tree_list
 
 
-def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None, leaf_matching_file=None, host_directory=None, host_matching_file=None, host_matching_dir=None):
+def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None, leaf_matching_file=None, host_directory=None, host_matching_file=None, host_matching_dir=None,inter_amalgamation=False):
 
-    symbiont_list, clades_data_list, c_match_list, gene_file_list, symbiont_file_list=read_input_2levels(symbiont_directory, gene_directory=gene_directory, leaf_matching_directory=leaf_matching_directory, leaf_matching_file=leaf_matching_file, inter=False)
-    if host_directory==None:
-        return symbiont_list, clades_data_list, c_match_list, gene_file_list
+    symbiont_list, am_tree_list=read_input_2levels(symbiont_directory, gene_directory=gene_directory, leaf_matching_directory=leaf_matching_directory, leaf_matching_file=leaf_matching_file, inter=False)
+    if host_directory is None:
+        return symbiont_list, am_tree_list
     else:
         #we construct a new intermediate tree list, however,
-        host_list, inter_clades_data_list, inter_c_match_list, inter_file_list, inter_clade_to_tree=read_input_2levels(host_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=True, inter_file_list=symbiont_file_list)
-        return symbiont_list, clades_data_list, c_match_list, gene_file_list, host_list, inter_clades_data_list, inter_c_match_list, inter_file_list, inter_clade_to_tree
+        if inter_amalgamation:
+            host_list, inter_am_tree_list=read_input_2levels(host_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=False,inter_file_list=symbiont_file_list)
+        else:
+            host_list, inter_am_tree_list=read_input_2levels(host_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=True, inter_file_list=symbiont_file_list)
+        return symbiont_list, am_tree_list, host_list, inter_am_tree_list
 
 
 
 
 
 
-
-"""
-def read_input_3Level(upper_dir, inter_dir, lower_dir, int_up_match_dir=None, low_int_match_dir=None):
-    upper_list, upper_file_list=construct_tree_list(upper_dir, amalgamation=False)
-
-    inter_list, inter_file_list=construct_tree_list(inter_dir)
-
-    lower_list, lower_file_list=
-
-
-    symbiont_list, symbiont_file_list=construct_tree_list(symbiont_directory, amalgamation=False)
-    gene_list, gene_file_list=construct_tree_list(gene_directory, amalgamation=True)
-    i=0
-    for symbiont in symbiont_list:
-        rename_tree(symbiont,symbiont_file_list[i])
-        i+=1
-    clades_data_list= compute_clade_frequencies_multiple_families(gene_list)
-    if leaf_matching_directory != None:
-        leaf_matching_list=construct_leaves_matching_dir(leaf_matching_directory,gene_file_list)
-        c_match_list=all_name_matching_to_tree_matching(symbiont_list,clades_data_list, leaf_matching_list)
-    else:
-        symbiont_name_to_tree=dict()
-        for symbiont in symbiont_list:
-            for u in symbiont.leaves():
-                symbiont_name_to_tree[u.name]=u
-        c_match_list=[]
-        for i_clade in range(len(clades_data_list)):
-            d=dict()
-            for u in clades_data_list[i_clade][0]:
-                v=clades_data_list[i_clade][2][u]
-                if len(v)==1:
-                    d[u]=symbiont_name_to_tree[v[0]]
-            c_match_list.append(d)
-    return symbiont_list, clades_data_list, c_match_list, gene_file_list
-
-"""
 
 
 
