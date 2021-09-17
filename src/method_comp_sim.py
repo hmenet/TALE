@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 def read_transfer_files(input_file_list):
     l_t_list=[]
     for input_file in input_file_list:
@@ -75,6 +76,9 @@ def test_transfer(l_t_list,real_l_t_list):
 
 
 heuristic_list=["2l","dec","MC"]
+#heuristic_list=["2l","dec"]
+
+path_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/output2/"
 path_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/output/"
 sim_number="_high1"
 sim_number="1"
@@ -85,6 +89,7 @@ path_dir_sim="/home/hmenet/Documents/Stage_M2/These/script/simulation/test_27072
 
 
 list_info=[]
+#for sim_type in ["low","med","high"]:
 for sim_type in ["highmed","highlow","low","med","high"]:
     for i_sim in range(1,6):
         #sim_type="med"
@@ -99,14 +104,24 @@ for sim_type in ["highmed","highlow","low","med","high"]:
         for heuristic in heuristic_list:
             print(heuristic)
             l_event_aggregate,l_events_by_fam=read_output_file_list([path_dir+sim_type+"/freq_"+sim_number+heuristic+"_"+"gene"+str(i)+".pruned.tree.nwk" for i in range(1,n_gene+1)])
+
+            """
+            gene_likelihood=[]
+            for i in range(0,n_gene):
+                log_file=path_dir+sim_type+"/freq_"+sim_number+heuristic+"_"+str(i)+"_likelihood"
+                f=open(log_file,mode="r")
+                s=f.read()
+                log_l=float(s)
+                gene_likelihood.append(log_l)
+            """
             l_t_list=transfer_list_from_events(l_events_by_fam)
             precision, recall, n_list, real_n_list=test_transfer(l_t_list,real_l_t_list)
             print("precision",precision)
             print("recall",recall)
             for i_gene in range(len(precision)):
-                list_info.append([precision[i_gene],recall[i_gene],n_list[i_gene],real_n_list[i_gene],heuristic,sim_type,sim_number])
+                list_info.append([precision[i_gene],recall[i_gene],n_list[i_gene],real_n_list[i_gene],heuristic,sim_type,sim_number])#,gene_likelihood[i_gene-1]])
 
-list_columns=["precision","recall","inferred_n_transfer","sim_n_transfer","heuristic","sim_type","sim_number"]
+list_columns=["precision","recall","inferred_n_transfer","sim_n_transfer","heuristic","sim_type","sim_number"]#,"log_likelihood"]
 df=pd.DataFrame(list_info,columns=list_columns)
 
 
@@ -130,6 +145,9 @@ plt.show()
 df.boxplot(column="recall", by="heuristic")
 plt.show()
 
+#df.boxplot(column="log_likelihood", by="heuristic")
+#plt.show()
+
 
 print(df.groupby("sim_type").mean())
 
@@ -149,6 +167,48 @@ df.groupby("sim_type").boxplot(column="recall", by="heuristic")
 plt.title("recall")
 plt.show()
 
+#df.groupby("sim_type").boxplot(column="log_likelihood", by="heuristic")
+#plt.title("log likelihood")
+#plt.show()
+
+
+#plt.figure()
+#for name, group in dfh:
+#    plt.scatter(group["precision"],group["log_likelihood"],label=name)
+
+#df.groupby("heuristic").plot.scatter(x="precision",y="recall")
+
+#plt.legend()
+#plt.show()
+
+def test_pairwise(h1,h2):
+    l2l=list(df[df.heuristic==h1].precision)
+    ldec=list(df[df.heuristic==h2].precision)
+    l3=[i - j for (i,j) in zip(l2l,ldec)]
+    plt.figure()
+    plt.hist(l3,bins=20)
+    plt.show()
+    print(len([i for i in l3 if i>0]))
+    print(len([i for i in l3 if i<0]))
+    print(len([i for i in l3 if i==0]))
+
+    l2l=list(df[df.heuristic==h1].recall)
+    ldec=list(df[df.heuristic==h2].recall)
+    l3=[i - j for (i,j) in zip(l2l,ldec)]
+    plt.figure()
+    plt.hist(l3,bins=20)
+    plt.show()
+    print(len([i for i in l3 if i>0]))
+    print(len([i for i in l3 if i<0]))
+    print(len([i for i in l3 if i==0]))
+
+test_pairwise("2l","dec")
+test_pairwise("2l","MC")
+test_pairwise("dec","MC")
+
+
+
+#df.to_csv("/home/hmenet/Documents/Stage_M2/These/write/papier/figures/simulation/simulation_with_log.csv")
 
 """
 plt.figure()

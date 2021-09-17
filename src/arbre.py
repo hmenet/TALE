@@ -32,6 +32,8 @@ class Tree:
         self.birth_time=None #birth time of the specie
         self.parasites=[] # for a host, list of the parasites in this host (réciproque de match)
         
+        self.event_list=None
+        
         ###for visualisation and manipulation
         self.id=1 #an id to identificate the nodes, root is 1, if parent is n, children are 2n and 2n+1
         self.name=None # a name for the tree,to identificate trees with the root name and when the tree comes from real data its the name of the node in the newick file

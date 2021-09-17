@@ -39,6 +39,7 @@ def count_events(l_event min_rate=0.0001):
 
 #version pour chercher maximum likelihood comme dans ALE ou Corepa
 def gene_rates_ml(rec):
+    rec.rates_inference=True
     i_steps=0
     while i_steps < rec.n_steps :
         rec_sol=reconciliation(rec,rate_inference=True)
@@ -49,4 +50,5 @@ def gene_rates_ml(rec):
         rec.rates.reinit()
         print("rates estimation step ", i_steps, "/",n_steps, " likelihood: ", rec_sol.likelihood, "rates :", rec.rates.pp)
         i_steps+=1
+    rec.rates_inference=False
 

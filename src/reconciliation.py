@@ -8,192 +8,146 @@ from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match
 
 from event_frequency_output import output_3level_transfer_info, output_3level_matching_info
 
-#parallel job, if parallelizing on samples
-def job_todo(entry_tuple):
-    P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer,ncpu=entry_tuple
-    if i==0:
-        best_here=best
-    else:
-        best_here=False
-    return sample_gene_upper_rec(P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size, best=best_here, return_r=return_r, P_transfer=P_transfer)
+from rec_classes import Tree_list
+
+def aggregate_scenarios(scenario_list):
+    d=dict()
+    for scenario in scenario_list:
+        for event in scenario.event_list:
+            ekey=event.key()
+            d.setdefault(ekey,0)
+            d[ekey]+=1
+    for ekey in d:
+        d[ekey]/=len(scenario_list)
+    return d
+
 
 #if parallelizing on gene family
-def family_job(entry_tuple):
-    parasite_post_order,E, Eavg_no_log, clades_data, rates_g, c_match_list_i_clade, best, multi_process, multi_process_family, sample, n_sample, return_r, P_transfer,ncpu = entry_tuple
-    P,P_TL, log_l,corr_size=compute_upper_gene_P(parasite_post_order,E, Eavg_no_log, clades_data, rates_g, c_match_list_i_clade,more_output=True, P_transfer=P_transfer)
-    if sample :
-        l_events_list=[]
-        list_r=[]
-        if multi_process_family or not multi_process:
-            #l_events_list=map(job_todo, job_list)
-            for i in range(n_sample):
-                if i==0:
-                    best_here=best
-                else:
-                    best_here=False
-                l_events_tmp, r_tmp=sample_gene_upper_rec(P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size, best=best_here, return_r=return_r, P_transfer=P_transfer)
-                l_events_list.append(list(l_events_tmp))
-                list_r.append(r_tmp)
-        else:
-            job_list=[(P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer,ncpu) for i in range(n_sample)]
-            #parallel version only if not already parrallel by family
-            with mp.Pool(ncpu) as pool:
-                output_tmp=pool.map(job_todo, job_list)
-                for le, r in output_tmp:
-                    l_events_list.append(le)
-                    list_r.append(r)
-    if sample:
-        if return_r:
-            return log_l, l_events_list, list_r
-        else:
-            return log_l, l_events_list
+def family_job(rec):
+
+    ### P computation
+    P,P_TL, log_l,corr_size=compute_upper_gene_P(rec)
+    rec.lower_tree_computation.P=P
+    rec.lower_tree_computation.P_TL=P_TL
+    rec.lower_tree_computation.log_l=log_l
+    rec.lower_tree_computation.corr_size=corr_size
+
+    ### Sampling
+    if rec.rates_inference:
+        n_sample=rec.n_sample_rates
     else:
-        return log_l
-
-
-def two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=True, n_sample=100, best=False, n_recphyloxml=0, multi_process=False, multi_process_family=False, return_r=False, P_transfer=None,ncpu=4):
-    if return_r:
-        r_list_by_family=[]
-    if sample:
-        l_event_by_family=[dict() for i in range(len(clades_data_list))]
-        l_matching_by_family=[dict() for i in range(len(clades_data_list))]
-        l_scenarios=[[[] for j in range(len(clades_data_list))] for i in range(n_recphyloxml)]
-    log_likelihood=0
-
-    E,Eavg_no_log=compute_upper_gene_E(parasite_post_order, rates_g)
-
-    job_fam_list=[(parasite_post_order,E, Eavg_no_log, clades_data_list[i_clade], rates_g, c_match_list[i_clade], best, multi_process, multi_process_family, sample, n_sample, return_r, P_transfer,ncpu) for i_clade in range(len(clades_data_list))]
-    #map output is an iterable map object
-    if not multi_process_family:
-        fam_output=map(family_job, job_fam_list)
-    else:
-        with mp.Pool(ncpu) as pool:
-            fam_output=pool.map(family_job, job_fam_list)
-
-    if sample:
-        i_clade=0
-        #aggregation of results:
-        for one_fam_output in fam_output:
-            if return_r:
-                log_l, l_events_list, list_r=one_fam_output
-                r_list_by_family.append(list_r)
+        n_sample=rec.n_sample
+    scenario_list=[]
+    if n_sample > 0 :
+        for i in range(n_sample):
+            if i==0:
+                best_here=rec.best
             else:
-                log_l, l_events_list=one_fam_output
-            l_events_aggregate=l_event_by_family[i_clade]
-            log_likelihood+=log_l
-            i_sample=0
-            for l_event in l_events_list:
-                if i_sample < n_recphyloxml:
-                    l_scenarios[i_sample][i_clade]=list(l_event)
-                    #warning : scenario is not renamed after parallelization, so the trees referenced in it may be copies
-                for event in l_event:
-                    if event in l_events_aggregate:
-                        l_events_aggregate[event]+=1
-                    else:
-                        l_events_aggregate[event]=1
-                i_sample+=1
-            i_clade+=1
-    else:
-        for log_l in fam_output:
-            log_likelihood+=log_l
+                best_here=False
+            sampled_scenario=sample_gene_upper_rec(rec,best=best_here)
+            scenario_list.append(sampled_scenario)
+        aggregate_dict=aggregate_scenarios(scenario_list)
+    return scenario_list, aggregate_dict,rec
 
-    if sample:
-        name_to_tree=dict()
-        for u in parasite_post_order:
-            name_to_tree[u.name]=u
-        if multi_process or multi_process_family:
-            new_l_event_by_family=[]
-            #we go through all events to assign the trees in the input list in the events instead of the copies created for multiprocessing
-            for l_events_aggregate in l_event_by_family:
-                new_l_events_aggregate=dict()
-                for e in l_events_aggregate:
-                    new_event=(e[0],name_to_tree[e[1].name],e[2], name_to_tree[e[3].name], e[4], name_to_tree[e[5].name], e[6])
-                    new_l_events_aggregate.setdefault(new_event, 0)
-                    new_l_events_aggregate[new_event]+=l_events_aggregate[e]
-                new_l_event_by_family.append(new_l_events_aggregate)
-            l_event_by_family=new_l_event_by_family
-        if return_r:
-            new_r_list_by_sample=[[dict() for i in range(len(r_list_by_family))] for i in range(n_sample)]
-            for i_clade in range(len(r_list_by_family)):
-                r_list=r_list_by_family[i_clade]
-                for i_sample in range(n_sample):
-                    r=r_list[i_sample]
-                    new_r=new_r_list_by_sample[i_sample][i_clade]
-                    for c in r:
-                        new_r[c]=[]
-                        for e in r[c]:
-                            new_r[c].append(name_to_tree[e.name])
 
-        #effectif -> frequences
-        for l_events_aggregate in l_event_by_family:
-            for event in l_events_aggregate:
-                    l_events_aggregate[event]/=n_sample
-    if sample:
-        if return_r:
-            return log_likelihood, l_event_by_family, l_scenarios, new_r_list_by_sample
-        else:
-            return log_likelihood, l_event_by_family, l_scenarios
+
+def two_level_rec(rec):
+    n_lower_tree=len(rec.lower)
+    n_scenario=rec.n_output_scenario
+    if n_scenario>0 :
+        r_list_by_family=[]
+    if rec.n_sample>0:
+        l_event_by_family=[dict() for i in range(n_lower_tree)]
+        l_matching_by_family=[dict() for i in range(n_lower_tree)]
+        l_scenarios=[[[] for j in range(n_lower_tree)] for i in range(n_scenario)]
+    log_likelihood=0
+    log_likelihood_list=[]
+    compute_upper_gene_E(rec)
+
+    #map output is an iterable map object
+    if multi_process_family:
+        with mp.Pool(rec.ncpu) as pool:
+            output_list=pool.map(family_job, rec)
     else:
-        return log_likelihood
+        output_list=map(family_job, rec)
+
+    i_clade=0
+
+
+    #aggregation of results:
+    for scenario_list,single_rec in output_list:
+        l_events_aggregate=l_event_by_family[i_clade]
+        log_likelihood+=single_rec.lower_tree_computation.log_l
+        log_likelihood_list.append(single_rec.lower_tree_computation.log_l)
+        i_clade+=1
+
+
+    rec_sol=Rec_sol()
+    rec_sol.log_likelihood=log_likelihood
+    rec_sol.log_likelihood_by_gene=log_likelihood_list
+    rec_sol.l_event_by_family=l_event_by_family
+    rec_sol.l_scenario=l_scenarios
+
+
+    return rec_sol
 
 #rec is a rec_problem instance, and rate inference is True if called during rate inference
-def reconciliation(rec, rate_inference=False):
+def reconciliation(rec):
 
     if rec.third_level:
         if rec.heuristic in ["dec","dec_no_ghost"]:
-            best=True
-            n_sample_inter=1
+            rec.upper_rec.best=True
+            rec.upper_rec.n_sample=1
             n_sample_MC=1
         if rec.heuristic=="MC":
             best=False
-            n_sample_inter=rec.n_sample_mc
+            rec.upper_rec.n_sample=rec.n_mc_samples
+        rec.upper.n_output_scenario=rec.n_sample
+        upper_rec_sol= two_level_rec(rec.upper_rec)
+        compute_upper_gene_E(rec.upper_rec)
 
-        upper_rec_sol= two_level_rec(rec.upper_rec, n_sample=n_sample_inter, best=best, n_recphyloxml=n_sample_inter, return_r=True)
+        l_scenario=upper_rec_sol.l_scenario
 
+        ######### done till there
 
-        E,Eavg_no_log=compute_upper_gene_E(rec.upper_rec)
-        E_no_log=dict()
-        for h in E:
-            E_no_log[h]=np.exp(E[h])
+        rec_sol_global=Rec_sol()
+        rec_sol_global.upper_divided_sol=[]
 
-        log_likelihood_list=[]
-        l_scenarios=[]
-        l_event_by_family_aggregate=[dict() for i_clade in range(len(clades_data_list))]
+        for am_tree in rec.lower:
+            am_tree.save_match()
+
         i_upper_sample=-1
-        for r_by_fam in r_list_by_sample:
+
+        for by_fam_scenario in l_scenario:
+            reconstructed_inter_list=[]
             i_upper_sample+=1
-            match_hp=dict()
-            for i_clade in range(len(r_by_fam)):
-                r=r_by_fam[i_clade]
-                clade_to_tree=inter_clade_to_tree_list[i_clade]
-                clade_to_tree_rev=dict()
-                for tree in clade_to_tree:
-                    clade_to_tree_rev[clade_to_tree[tree]]=tree
-                for c in r:
-                    match_hp[clade_to_tree_rev[c]]=r[c]
-            host_info=upper_post_order, rates_inter,match_hp, E_no_log,heuristic
 
-            P_transfer=prob_transfer_sequential(host_info, parasite_post_order)
-            log_l, l_event_by_family, l_scenar = two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family, P_transfer=P_transfer,ncpu=ncpu)
-            log_likelihood_list.append(log_l)
+            for scenario in by_fam_scenario:
+                reconstructed_inter=scenario.reconstructed_lower
+                reconstructed_inter_list.append(reconstructed_inter)
+            reconstructed_inter_list=Tree_list(reconstructed_inter_list)
 
-            if not less_output:
-                output_3level_transfer_info(l_event_by_family,"output/3level_info"+str(i_upper_sample), log_l, match_hp, rates_inter, E, l_scenarios_upper[i_upper_sample])
-                output_3level_matching_info("output/3level_info_match_hp"+str(i_upper_sample), match_hp)
-
-
-            l_scenarios+=l_scenar
-            for i_clade in range(len(l_event_by_family)):
-                l_event=l_event_by_family[i_clade]
-                l_event_aggregate=l_event_by_family_aggregate[i_clade]
-                for event in l_event:
-                    l_event_aggregate.setdefault(event,0)
-                    l_event_aggregate[event]+=l_event[event]
-        for i_clade in range(len(l_event_by_family_aggregate)):
-            l_event_aggregate=l_event_by_family_aggregate[i_clade]
-            for event in l_event_aggregate:
-                l_event_aggregate[event]/=n_sample_MC
+            P_transfer=prob_transfer_sequential(rec.upper_rec, reconstructed_inter_list)
+            rec.upper_tree_computation.P_transfer=P_transfer
+            rec.upper=reconstructed_inter_list
+            #we match lower to reconstructed
+            for am_tree in rec.lower:
+                for u in am_tree.leaves:
+                    for scenario in by_fam_scenario:
+                        if u.constant_match in scenario.am_tree_to_reconstructed:
+                            u.match=scenario.am_tree_to_reconstructed_tree(u.constant_match)
+            rec_sol_this_upper=two_level_rec(rec)
+            rec_sol_this_upper.upper_scenario=by_fam_scenario
+            rec_sol_global.upper_divided_sol.append(rec_sol_this_upper)
+        log_likelihood_list=[]
+        l_event_aggregate_global=dict()
+        for rec_sol in rec_sol_global.upper_divided_sol:
+            l_event_aggregate=rec_sol.l_event_aggregate
+            log_likelihood.append(rec_sol.log_likelihood)
+            for lower_family_l_event:
+                for event in l_event_aggregate:
+                    l_event_aggregate[event]/=n_sample_MC
         log_likelihood=log_add_list(log_likelihood_list) - np.log(n_sample_MC)
-        return log_likelihood, l_event_by_family_aggregate, l_scenarios, l_scenarios_upper, log_likelihood_list
+        return
     else:
-        return two_level_rec(parasite_post_order, clades_data_list, c_match_list,rates_g, sample=sample, n_sample=n_sample, best=best, n_recphyloxml=n_recphyloxml, multi_process=multi_process, multi_process_family=multi_process_family,ncpu=ncpu)
+        return two_level_rec(rec)

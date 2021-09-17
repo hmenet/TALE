@@ -84,12 +84,7 @@ args=parser.parse_args()
 if args.verbose:
     print("verbosity turned on")
 
-if not args.third_upper_level:
-    symbiont_list, am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file)
-
-    rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
-
-else:
+if args.third_upper_level and args.heuristic!="unaware":
     if args.inter_amalgamation:
         symbiont_list, am_tree_list, host_list, inter_am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file, host_directory=args.third_upper_level, host_matching_file=args.inter_match_file, host_matching_dir=args.inter_match_dir, inter_amalgamation=args.inter_amalgamation)
     else:
@@ -102,7 +97,7 @@ else:
     if args.verbose:
         print(inter_c_match_list)
 
-    for inter_am_tree in range(len(inter_am_tree_list)):
+    for inter_am_tree in inter_am_tree_list:
         for c in inter_am_tree.post_order:
             if c.is_leaf() and c.match is None:
                 c.match = c.corresponding_tree
@@ -122,9 +117,17 @@ else:
     rec_upper_problem.multiprocess_sampling=args.multiprocess
     rec_upper_problem.n_recphyloxml=args.n_recphyloxml
 
+
+    rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
     rec_problem.third_level=True
     rec_problem.heuristic=args.three_level_heuristic
     rec_problem.upper_rec=rec_upper_problem
+
+else:
+    symbiont_list, am_tree_list=read_input(args.upper_dir, arrec_problem.third_level=Truegs.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file)
+    rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
+
+
 
 
 #initializing method parameters
@@ -138,7 +141,7 @@ rec_problem.rates = Event_rates(tr=args.transfer_rate,lr=args.loss_rate,dr=args.
 rec_problem.ncpu = args.n_cpu_multiprocess
 rec_problem.multiprocess_fam=args.multiprocess_fam
 rec_problem.multiprocess_sampling=args.multiprocess
-rec_problem.n_recphyloxml=args.n_recphyloxml
+rec_problem.n_output_scenario=args.n_recphyloxml
 
 """
 
@@ -176,45 +179,35 @@ def rec_and_output(rec):
     cmpt_time=time.perf_counter()-t1
 
     if rec.third_level:
-        print("Heuristic: ", rec.heuristic, rec.mc_sample)
+        if rec.heuristic="MC":
+            print("Heuristic: ", rec.heuristic, rec.mc_sample)
+        else:
+            print("Heuristic: ", rec.heuristic)
     else:
         print("Heuristic: 2 Level")
     print("Reconciliation ended in ", cmpt_time, " s")
     print("Log Likelihood: ", rec_sol.likelihood)
     print("Rates: ", rec.rates)
 
-    ############# done till here
 
-    out_dir1=out_file[:out_file.rfind("/")+1]
-    if not path.isdir(out_dir1):
-        makedirs(out_dir1)
-    out_dir2=out_freq_file[:out_freq_file.rfind("/")+1]
-    if not path.isdir(out_dir2):
-        makedirs(out_dir2)
+    if not rec.third_level:
+        upper_scenario=[0]
 
-    if upper_input != None:
-        upper_post_order, inter_clades_data_list,inter_c_match_list, rates_inter, heuristic, inter_clade_to_tree_list, n_sample_MC, host_list=upper_input
-        if heuristic=="dec":
-            n_sample_MC=1
-    else:
-        n_sample_MC=1
-    for upper_rec in range(n_sample_MC):
-        if upper_input != None and not less_output:
+    for upper_scenario,lower_scenario_list in zip(rec_sol_upper.scenario_list,rec_sol.scenario_list):
+        if rec.third_level:
             out_file_name=out_file+str(upper_rec)+"upper"+".recphyloxml"
+            save_recphyloxml_from_l_event(rec.upper_rec,upper_scenario, out_file_name)
 
-            inter_clade_to_name_list=clade_to_name_by_fam(inter_clades_data_list, symbiont_list)
-
-            save_recphyloxml_from_l_event(host_list, l_scenarios_upper[upper_rec], out_file_name, c_match_list=inter_c_match_list, clade_data_list=inter_clades_data_list, clade=True, clade_to_name_list=inter_clade_to_name_list,inter_symbiont_list=symbiont_list)
-
-        for i_recphyloxml in range(min(n_sample, n_recphyloxml)):
-            scenario_by_family=l_scenarios[i_recphyloxml]
-            if best_rec and i_recphyloxml==0:
+        i_recphylo=0
+        for lower_scenario in lower_scenario_list:
+            if rec.best and i_recphyloxml==0:
                 out_file_name=out_file+str(i_recphyloxml)+"_best"+".recphyloxml"
             else:
                 out_file_name=out_file+str(i_recphyloxml)+".recphyloxml"
-            save_recphyloxml_from_l_event(symbiont_list, scenario_by_family, out_file_name, c_match_list=c_match_list, clade_data_list=clades_data_list, clade=True)
-    if n_sample>0:
-        output_frequency_for_all_family(l_event_gene, gene_file_list, output_file=out_freq_file)
+            save_recphyloxml_from_l_event(rec, lower_scenario, out_file_name)
+            i_recphylo+=1
+    if rec.n_sample>0:
+        output_frequency_for_all_family(rec_sol.event_list_aggregate, output_file=out_file+"freq")
 
 ################$
 

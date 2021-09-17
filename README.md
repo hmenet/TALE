@@ -123,6 +123,7 @@ Usage:
 
 # todo :
 
++ rename uniquely all nodes among all trees
 + possibility for null transfer rate
 + what happen if rooted gene tree
 + output file names

@@ -34,3 +34,19 @@ def inter_list(l1,l2):
     s1=set(l1)
     return(any(x in s1 for x in l2))
 #any return true if any element of an iterable is true
+
+#compute all host node reachable without tl
+def notl_reachable(c,mult_match):
+    l=set()
+    for cleaf in c.leaves():
+        if mult_match:
+            for e in cleaf.match:
+                for f in e.ancestor():
+                    if not f in l:
+                        l.add(f)
+        else:
+            for f in cleaf.match.ancestor():
+                if not f in l:
+                    l.add(f)
+
+    return l
