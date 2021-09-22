@@ -23,10 +23,9 @@ import argparse
 from reconciliation import reconciliation
 from rates_inference import gene_rates_ml
 from arbre import save_tree
-from out_recphyloxml import save_recphyloxml_from_l_event
+from out_recphyloxml import save_recphyloxml_from_rec
 from read_input import read_input
 from event_frequency_output import output_frequency_for_all_family
-from read_clade_frequencies import clade_to_name_by_fam
 
 from rec_classes import*
 
@@ -53,13 +52,12 @@ parser.add_argument("lower_dir", type=str, help="directory with newick unrooted 
 parser.add_argument("-mdir", "--matching_dir", type=str, help="provide a directory with matching files for each lower level tree to match their leaves to upper tree ones. Without it, lower tree and upper tree leaves must have the same name. A lower leaf can be matched to multiple upper leaves, which will be interpreted as uncertainty on the match (not failure to diverge)")
 parser.add_argument("-mf", "--matching_file", type=str, help="provide a file with all matching infos for each lower level tree to match their leaves to upper tree ones. Alternative to -mdir")
 parser.add_argument("-o", "--output", default="output/rec",type=str, help="output recphyloxml file. If multiple samples, multiple recphyloxml are generated, if best rec option, then first rec is the best one")
-parser.add_argument("-of", "--output_freq", default="output/event_frequency",type=str, help="output event frequency file.")
 parser.add_argument("-ns", "--n_rec_sample", type=int, default=100, help="number of reconciliation scenarios sampled to compute events frequency")
 parser.add_argument("-nre", "--n_rates_estimation_steps", type=int, default=5, help="number of steps in the rates estimation process, for each step we compute likelihood of reconciliation and set rates to the observed frequency for each events")
 parser.add_argument("-nres", "--n_rates_estimation_rec_sample", type=int, default=100, help="in the rates estimation process, number of scenarios sampled to estimate event frequencies")
 parser.add_argument("-b", "--best_rec", action="store_true", help="return the best (maximum likelihood) reconciliation scenario.")
-parser.add_argument("-nrxml", "--n_recphyloxml", type=int, default=1, help="number of sampled scenarios stored as recphyloxml file.")
-parser.add_argument("-mp", "--multiprocess", default=False, help="enable multiprocessing for the sampling parts", action="store_true")
+parser.add_argument("-nrxml", "--n_recphyloxml", type=int, default=1, help="number of sampled scenarios stored as recphyloxml file (if multiple upper scenario sampled, number of lower scenarios for each upper one).")
+parser.add_argument("-inrxml", "--inter_n_recphyloxml", type=int, default=1, help="number of sampled inter upper scenarios stored as recphyloxml file.")
 parser.add_argument("-mpf", "--multiprocess_fam", default=False, help="enable multiprocessing with one process for each lower tree family. If chosen, stop from using multiprocess for sampling -mp", action="store_true")
 parser.add_argument("-ncpu", "--n_cpu_multiprocess", default=4, type=int,help="number of cpu used for multiprocessing")
 parser.add_argument("-tl", "--third_upper_level", default=None, help="add a directory with an upper level on top of the two previous ones, the upper become intermediate")
@@ -114,8 +112,7 @@ if args.third_upper_level and args.heuristic!="unaware":
     rec_upper_problem.rates = Event_rates(tr=args.inter_transfer_rate,lr=args.inter_loss_rate,dr=args.inter_duplication_rate)
     rec_upper_problem.ncpu = args.n_cpu_multiprocess
     rec_upper_problem.multiprocess_fam=args.multiprocess_fam
-    rec_upper_problem.multiprocess_sampling=args.multiprocess
-    rec_upper_problem.n_recphyloxml=args.n_recphyloxml
+    rec_upper_problem.n_output_scenario=args.inter_n_recphyloxml
 
 
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
@@ -124,7 +121,7 @@ if args.third_upper_level and args.heuristic!="unaware":
     rec_problem.upper_rec=rec_upper_problem
 
 else:
-    symbiont_list, am_tree_list=read_input(args.upper_dir, arrec_problem.third_level=Truegs.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file)
+    symbiont_list, am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file)
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
 
 
@@ -135,22 +132,19 @@ else:
 rec_problem.output_path = args.output
 rec_problem.n_sample = args.n_rec_sample
 rec_problem.n_steps = args.n_rates_estimation_steps
-rec_problem.n_rec_sample_rates = args.n_rec_sample_rates
+rec_problem.n_rec_sample_rates = args.n_rates_estimation_rec_sample
 rec_problem.best_rec = args.best_rec
 rec_problem.rates = Event_rates(tr=args.transfer_rate,lr=args.loss_rate,dr=args.duplication_rate)
 rec_problem.ncpu = args.n_cpu_multiprocess
 rec_problem.multiprocess_fam=args.multiprocess_fam
-rec_problem.multiprocess_sampling=args.multiprocess
 rec_problem.n_output_scenario=args.n_recphyloxml
 
 """
 
 RESTE À AJOUTER
 
-out_freq_file=args.output_freq,
 less_output=args.inter_less_output
 verbose=args.verbose
-out_freq_file ?
 
 """
 
@@ -162,52 +156,68 @@ def rec_and_output(rec):
         t1=time.perf_counter()
         gene_rates_ml(rec.upper_rec)
         cmpt_time=time.perf_counter()-t1
+        rec.upper_rec.lower_tree_computation.time=cmpt_time
         print("Upper inter rates estimated in ", cmpt_time, " s")
         print("Upper rates", rec.upper_rec.rates.pp())
 
 
     t1=time.perf_counter()
-    rates=gene_rates_ml()
+    rates=gene_rates_ml(rec)
     cmpt_time=time.perf_counter()-t1
     print("Rates estimated in ", cmpt_time, " s")
-    print("Rates", rec.rates)
+    print("Rates", rec.rates.pp())
 
 
 
     t1=time.perf_counter()
     rec_sol=reconciliation(rec)
     cmpt_time=time.perf_counter()-t1
+    rec.lower_tree_computation.time=cmpt_time
 
     if rec.third_level:
-        if rec.heuristic="MC":
+        if rec.heuristic=="MC":
             print("Heuristic: ", rec.heuristic, rec.mc_sample)
         else:
             print("Heuristic: ", rec.heuristic)
     else:
+        rec.heuristic="2l"
         print("Heuristic: 2 Level")
     print("Reconciliation ended in ", cmpt_time, " s")
-    print("Log Likelihood: ", rec_sol.likelihood)
-    print("Rates: ", rec.rates)
+    print("Log Likelihood: ", rec_sol.log_likelihood)
+    print("Rates: ", rec.rates.pp())
 
 
-    if not rec.third_level:
-        upper_scenario=[0]
 
-    for upper_scenario,lower_scenario_list in zip(rec_sol_upper.scenario_list,rec_sol.scenario_list):
+    #recphyloxml output
+    out_file=rec.output_path
+
+    if rec.third_level:
+        n_upper_scenario=rec.upper_rec.n_output_scenario
+    else:
+        n_upper_scenario=1
+
+    for i_upper_scenario in range(n_upper_scenario):
         if rec.third_level:
-            out_file_name=out_file+str(upper_rec)+"upper"+".recphyloxml"
-            save_recphyloxml_from_l_event(rec.upper_rec,upper_scenario, out_file_name)
-
+            out_file_name=out_file+str(i_upper_scenario)+"upper"+".recphyloxml"
+            save_recphyloxml_from_rec(rec.upper_rec,upper_scenario, out_file_name)
+            lower_scenario_list=rec_sol.upper_divided_sol[i_upper_scenario].scenario_list
+            rec_sol_to_use=rec_sol.upper_divided_sol[i_upper_scenario]
+        else:
+            lower_scenario_list=rec_sol.scenario_list
+            rec_sol_to_use=rec_sol
         i_recphylo=0
         for lower_scenario in lower_scenario_list:
-            if rec.best and i_recphyloxml==0:
-                out_file_name=out_file+str(i_recphyloxml)+"_best"+".recphyloxml"
+            if rec.best_rec and i_recphyloxml==0:
+                out_file_name=out_file+str(i_upper_scenario)+"u_"+str(i_recphylo)+"_best"+".recphyloxml"
             else:
-                out_file_name=out_file+str(i_recphyloxml)+".recphyloxml"
-            save_recphyloxml_from_l_event(rec, lower_scenario, out_file_name)
+                out_file_name=out_file+str(i_upper_scenario)+"u_"+str(i_recphylo)+".recphyloxml"
+            save_recphyloxml_from_rec(rec, lower_scenario, out_file_name,rec_sol_to_use)
             i_recphylo+=1
+
+
+    #frequency per gene output
     if rec.n_sample>0:
-        output_frequency_for_all_family(rec_sol.event_list_aggregate, output_file=out_file+"freq")
+        output_frequency_for_all_family(rec_sol.event_list_by_fam, rec, output_file=out_file+"freq")
 
 ################$
 

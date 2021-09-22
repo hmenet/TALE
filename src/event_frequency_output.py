@@ -41,16 +41,16 @@ def output_event_frequency(l_event_aggregate, rec,output_file):
                 s+="\tupper match\tupper left match\tupper right match"
             s+="\n"
             for event in event_sorted_by_types["SL"]:
-                s+="SL\t"+event.upper+"\t"+event.upper_left+"\t"+event.upper_right+"\t"+str(l_event_aggregate[event])+"\t"+event.lower
+                s+="SL\t"+event.upper+"\t"+event.upper_left_or_keeper_or_receiver+"\t"+event.upper_right_or_loser_or_donor+"\t"+str(l_event_aggregate[event])+"\t"+event.lower
                 if rec.third_level:
-                    s+="\t"+event.upper_match+"\t"+event.upper_left_match"\t"+event.upper_right_match
+                    s+="\t"+event.upper_match+"\t"+event.upper_left_match+"\t"+event.upper_right_match
                 s+="\n"
         if "T" in event_type:
             s+=event_type+"\tgiving species\treceiving species\tobserved frequency\tlower node\tlower staying\tlower leaving\n"
             if rec.third_level:
                 s+="\tupper giving match\tupper receiving match"
             for event in event_sorted_by_types[event_type]:
-                s+=event_type+"\t"+event.upper+"\t"+event.upper_left+"\t"+str(l_event_aggregate[event])+"\t"+event.lower+"\t"+event.lower_right+"\t"+event.lower_left+
+                s+=event_type+"\t"+event.upper+"\t"+event.upper_left_or_keeper_or_receiver+"\t"+str(l_event_aggregate[event])+"\t"+event.lower+"\t"+event.lower_right+"\t"+event.lower_left
             s+="\n"
     f=open(output_file, "w")
     f.write(s)
@@ -58,7 +58,7 @@ def output_event_frequency(l_event_aggregate, rec,output_file):
 
 def output_frequency_for_all_family(l_event_by_family, rec, output_file="event_frequency"):
     for i in range(len(l_event_by_family)):
-        output_event_frequency(l_event_by_family[i], output_file+gene_family_list[i])
+        output_event_frequency(l_event_by_family[i],rec, output_file+rec.lower[i].tree_name)
 
 
 

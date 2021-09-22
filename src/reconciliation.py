@@ -6,19 +6,27 @@ from gene_sample_rec import sample_gene_upper_rec
 from transfer_prob_pre_process import prob_transfer_sequential
 from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match
 
-from event_frequency_output import output_3level_transfer_info, output_3level_matching_info
+from rec_classes import Tree_list, Rec_sol
 
-from rec_classes import Tree_list
-
+#aggregate scenarios and create new events common to all genes
 def aggregate_scenarios(scenario_list):
     d=dict()
+    seen_events=dict()
     for scenario in scenario_list:
         for event in scenario.event_list:
+
             ekey=event.key()
-            d.setdefault(ekey,0)
-            d[ekey]+=1
-    for ekey in d:
-        d[ekey]/=len(scenario_list)
+            if not ekey in seen_events:
+                seen_events[ekey]=event
+            else:
+                event=seen_events[ekey]
+
+
+            d.setdefault(event,0)
+            d[event]+=1
+
+    for event in d:
+        d[event]/=len(scenario_list)
     return d
 
 
@@ -33,7 +41,7 @@ def family_job(rec):
     rec.lower_tree_computation.corr_size=corr_size
 
     ### Sampling
-    if rec.rates_inference:
+    if rec.rate_inference:
         n_sample=rec.n_sample_rates
     else:
         n_sample=rec.n_sample
@@ -41,7 +49,7 @@ def family_job(rec):
     if n_sample > 0 :
         for i in range(n_sample):
             if i==0:
-                best_here=rec.best
+                best_here=rec.best_rec
             else:
                 best_here=False
             sampled_scenario=sample_gene_upper_rec(rec,best=best_here)
@@ -56,44 +64,41 @@ def two_level_rec(rec):
     n_scenario=rec.n_output_scenario
     if n_scenario>0 :
         r_list_by_family=[]
-    if rec.n_sample>0:
-        l_event_by_family=[dict() for i in range(n_lower_tree)]
-        l_matching_by_family=[dict() for i in range(n_lower_tree)]
-        l_scenarios=[[[] for j in range(n_lower_tree)] for i in range(n_scenario)]
-    log_likelihood=0
-    log_likelihood_list=[]
     compute_upper_gene_E(rec)
 
     #map output is an iterable map object
-    if multi_process_family:
+    if rec.multiprocess_fam:
         with mp.Pool(rec.ncpu) as pool:
             output_list=pool.map(family_job, rec)
     else:
         output_list=map(family_job, rec)
 
-    i_clade=0
+
+    l_event_by_family=[]
+    log_likelihood=0
+    log_likelihood_list=[]
+    l_scenarios=[[] for i in range(rec.n_output_scenario)]
+
 
 
     #aggregation of results:
-    for scenario_list,single_rec in output_list:
-        l_events_aggregate=l_event_by_family[i_clade]
+    for scenario_list, aggregate_dict, single_rec in output_list:
+        l_event_by_family.append(aggregate_dict)
         log_likelihood+=single_rec.lower_tree_computation.log_l
         log_likelihood_list.append(single_rec.lower_tree_computation.log_l)
-        i_clade+=1
+
+        for i in range(rec.n_output_scenario):
+            l_scenarios[i].append(scenario_list[i])
 
 
-    rec_sol=Rec_sol()
-    rec_sol.log_likelihood=log_likelihood
+    rec_sol=Rec_sol(log_likelihood,l_event_by_family,l_scenarios)
     rec_sol.log_likelihood_by_gene=log_likelihood_list
-    rec_sol.l_event_by_family=l_event_by_family
-    rec_sol.l_scenario=l_scenarios
 
 
     return rec_sol
 
 #rec is a rec_problem instance, and rate inference is True if called during rate inference
 def reconciliation(rec):
-
     if rec.third_level:
         if rec.heuristic in ["dec","dec_no_ghost"]:
             rec.upper_rec.best=True
@@ -143,10 +148,9 @@ def reconciliation(rec):
         l_event_aggregate_global=dict()
         for rec_sol in rec_sol_global.upper_divided_sol:
             l_event_aggregate=rec_sol.l_event_aggregate
-            log_likelihood.append(rec_sol.log_likelihood)
-            for lower_family_l_event:
-                for event in l_event_aggregate:
-                    l_event_aggregate[event]/=n_sample_MC
+            log_likelihood_list.append(rec_sol.log_likelihood)
+            for event in l_event_aggregate:
+                l_event_aggregate[event]/=n_sample_MC
         log_likelihood=log_add_list(log_likelihood_list) - np.log(n_sample_MC)
         return
     else:

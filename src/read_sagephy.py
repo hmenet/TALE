@@ -522,7 +522,10 @@ def sagephy_to_3_level_input(data_dir,host_file, symbiont_directory, gene_direct
 
 
 sim_list_list=[]
-sim_list_list.append(["sim_290621_highmed"+str(i)+"/" for i in range(1,6)])
+
+sim_list_list=[["sim_290621_med_"+j+"_coevol"+str(i)+"/" for i in range(1,11)] for j in ["02","05","08","10"]]
+
+#sim_list_list.append(["sim_290621_highmed"+str(i)+"/" for i in range(1,6)])
 
 #sim_list_list.append(["sim_290621_highlow"+str(i)+"/" for i in range(1,6)])
 #sim_list_list.append(["sim_290621_high"+str(i)+"/" for i in range(1,6)])
@@ -548,7 +551,7 @@ for sim_list in sim_list_list:
             makedirs(output_path)
 
 
-        host_list, symbiont_list, clades_data_list, upper_leaf_matching, c_match_list,l_t_list= sagephy_to_3_level_input(data_dir,host_file,symbiont_dir, gene_dir, upper_match, lower_match,output_path+"/" +sim[:-1],observed_proba=0.15)#0.2#0.08)
+        host_list, symbiont_list, clades_data_list, upper_leaf_matching, c_match_list,l_t_list= sagephy_to_3_level_input(data_dir,host_file,symbiont_dir, gene_dir, upper_match, lower_match,output_path+"/" +sim[:-1],observed_proba=0.2)#0.15#0.08)
 
         print("\n lecture données ",sim," terminée")
 

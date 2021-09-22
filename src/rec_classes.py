@@ -27,7 +27,7 @@ class Event_rates:
         self.log_rates()
 
     def pp(self):
-        return "S " + self.sr + "D " + self.dr + "T " + self.tr + "L " + self.lr
+        return "S " + str(self.sr) + "\tD " + str(self.dr) + "\tT " + str(self.tr) + "\tL " + str(self.lr)
 
 #############
 
@@ -44,18 +44,21 @@ class Tree_list:
                 post_order.append(u)
         self.post_order=post_order
 
+
+    def __iter__(self):
+        return self.tree_list.__iter__()
+
+    def __next__(self):
+        return self.tree_list.__next__()
+
 ##############
-
-P, P_TL,E, parasite_post_order, clades_data, rates_g,c_match_list_i_clade, log_l, corr_size,best,i, return_r, P_transfer,ncpu=entry_tuple
-
-parasite_post_order,E, Eavg_no_log, clades_data, rates_g, c_match_list_i_clade, best, multi_process, multi_process_family, sample, n_sample, return_r, P_transfer,ncpu = entry_tuple
 
 
 class Rec_upper_tree_computation:
     def __init__(self):
         self.E=None
         self.Eavg_no_log=None
-        P_transfer=None
+        self.P_transfer=None
 
 class Rec_lower_tree_computation:
     def __init__(self):
@@ -63,6 +66,7 @@ class Rec_lower_tree_computation:
         self.P_TL=None
         self.log_l=None
         self.corr_size=None
+        self.time=None
 
 ##############
 
@@ -70,7 +74,6 @@ class Rec_problem:
     def __init__(self, symb_list,amal_genes):
         self.upper = symb_list
         self.lower = amal_genes
-        self.single_lower=None
         self.output_path = "output/"
         self.n_sample = 100
         self.n_steps = 5
@@ -81,8 +84,8 @@ class Rec_problem:
         self.ncpu = 4
         self.multiprocess_fam=False
         self.multiprocess_sampling=False
-        self.upper_tree_computation=None
-        self.lower_tree_computation=None
+        self.upper_tree_computation=Rec_upper_tree_computation()
+        self.lower_tree_computation=Rec_lower_tree_computation()
         self.rate_inference=False #True when infering rates
 
         ### for three level rec
@@ -100,24 +103,22 @@ class Rec_problem:
 
     def __next__(self):
         if self.iter_lower<len(self.lower):
-            single_gene_rec=Rec_problem(self.upper,None)
-            single_gene_rec.single_lower=self.lower[iter_lower]
-            single_gene_rec.n_sample = self.n_sample
-            single_gene_rec.n_steps = self.n_steps
-            single_gene_rec.n_rec_sample_rates = self.n_rec_sample_rates
-            single_gene_rec.n_recphyloxml= self.n_recphyloxml
-            single_gene_rec.best_rec = self.best_rec
-            single_gene_rec.rates = self.rates
-            single_gene_rec.ncpu = self.ncpu
-            single_gene_rec.multiprocess_fam= self.multiprocess_fam
-            single_gene_rec.multiprocess_sampling= self.multiprocess_sampling
-            single_gene_rec.upper_tree_computation= self.upper_tree_computation
-            single_gene_rec.third_level=self.third_level
-            single_gene_rec.upper_rec=self.upper_rec
-            single_gene_rec.heuristic=self.heuristic
-            single_gene_rec.mc_samples=self.mc_samples
 
-            self.iter_lower+=1e
+
+            d=vars(self)
+
+            single_gene_rec=Rec_problem(self.upper,None)
+
+            newd=vars(single_gene_rec)
+
+            for key in d:
+                if key == "lower":
+                    newd["single_lower"]=self.lower[self.iter_lower]
+                else:
+                    if key != "single_lower":
+                        newd[key]=d[key]
+
+            self.iter_lower+=1
             return single_gene_rec
         else:
             raise StopIteration
@@ -138,6 +139,7 @@ class Amalgamated_tree:
         self.reverse_post_order=None
         self.leaves=None
         self.constant_match=None
+        self.name=None
 
     def aux_init(self,clade_elements,clade_frequencies,clade_id,d,corresponding_clade_to_tree=None):
         self.clade_leaves=clade_elements[clade_id]
@@ -167,7 +169,7 @@ class Amalgamated_tree:
         self.log_freq()
 
     def is_leaf(self):
-        return(len(clade_leaves))==1
+        return(len(self.clade_leaves))==1
 
     def aux_liste(self,l,d):
         for (cl,cr) in self.child_frequencies:
@@ -180,7 +182,7 @@ class Amalgamated_tree:
     def liste(self):
         d=dict()
         l=[self]
-        self.aux_list(l,d)
+        self.aux_liste(l,d)
         return l
 
     def reverse_post_order_traversal(self):
@@ -238,13 +240,17 @@ class Rec_event:
         return self.upper_match is None
 
     def key(self):
-        l=[self.name, self.upper.name, self.upper_left_or_keeper_or_receiver.name, self.upper_right_or_loser_or_donor.name,self.lower,self.lower_left,self.lower_right]
-        if self.is_third_level():
-            l.append(self.upper_match)
-            l.append(self.upper_left_match)
-            l.append(self.upper_right_match)
-        return(tuple(l))
+        d=vars(self)
+        l=[]
+        for k in d:
+            l.append(d[k])
+        return tuple(l)
 
+    def init_name(self):
+        d=vars(self)
+        for key in d:
+            if (not (d[key] is None)) and not key=="name":
+                d[key]=d[key].name
 
 
 class Rec_scenario:
@@ -257,21 +263,13 @@ class Rec_scenario:
 
 #l_scenario is a list of reconstructed_tree
 class Rec_sol:
-    def __init__(self,log_likelihood,l_event_aggregate,l_scenario):
+    def __init__(self,log_likelihood,event_list_by_fam,l_scenario):
         self.log_likelihood=log_likelihood
-        self.l_event_aggregate=l_event_aggregate
-        self.l_scenario=l_scenario
+        self.event_list_by_fam=event_list_by_fam
+        self.scenario_list=l_scenario
         self.upper_divided_sol=None
-
-    def aggregate_from_scenario_list(self,scenario_list):
-        l_event_aggregate=[]
-        #we traverse all lower families
-        for scenario in scenario_list:
-            d=dict()
-
-
-    def from_upper_divided_to_global(self):
-        for rec_sol in upper_divided_sol:
+        self.log_likelihood_by_gene=None
+        self.upper_scenario=None
 
 
 

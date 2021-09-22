@@ -4,7 +4,7 @@ from os import walk
 import numpy as np
 from read_tree import read_tree, read_mult_tree
 from read_clade_frequencies import compute_clade_frequencies_multiple_families, compute_clade_frequencies_rooted_tree
-
+from rec_classes import Tree_list
 
 
 ### read the input datas  #####
@@ -42,7 +42,23 @@ def construct_tree_list(directory, amalgamation=False):
 #voir selon ce qu'on veut en faire apres
 def construct_leaves_matching(matching_file):
     d=dict()
-    f=open(matching_file, "r")
+
+    #trying different names for the matching file (notably in the case of a dir where match needed between gene and their matching
+    try:
+        f = open(matching_file,"r")
+    except IOError:
+        s=matching_file
+        new_match=s+".leafmap"
+        try:
+            f=open(new_match,"r")
+        except IOError:
+            if "." in s:
+                new_match=s[:s.rindex(".")]+".leafmap"
+            try:
+                f=open(new_match,"r")
+            except IOError:
+                print("Matching file or files format non valid, if using dir, use gene file name + .leafmap or genefile name")
+
     s=f.read()
     s1=s.split(sep="\n")
     for  u in s1:
@@ -64,7 +80,7 @@ def construct_leaves_matching_dir(matching_directory, file_list):
     new_file_list=[]#some minor changes between leaf mapping and gene trees names
     for s in file_list:
         #print(s)
-        new_file_list.append(s[:-3]+"leafmap")
+        new_file_list.append(s)
     leaf_matching_list=[]
     for i_file in range(len(new_file_list)):
         #pour correspondre aux noms donnés par sagephy
@@ -178,18 +194,18 @@ def read_input_2levels(symbiont_directory, gene_directory=None, leaf_matching_di
                     if not u.name in symbiont_name_to_tree:
                         symbiont_name_to_tree[u.name]=[]
                     symbiont_name_to_tree[u.name].append[u]
-            for i_clade in range(len(am_tree_list)):
-                for u in am_tree_list[i_clade].reverse_post_order:
+            for am_tree in am_tree_list:
+                for u in am_tree.reverse_post_order:
                     if u.is_leaf():
                         u.match=symbiont_name_to_tree[u.clade_leaves[0]]
-    for i_clade in am_tree_list:
-        am_tree_list[i_clade].tree_name=gene_file_list[i_clade]
+    for am_tree,gene_file in zip(am_tree_list,gene_file_list):
+        am_tree.tree_name=gene_file
     return symbiont_list, am_tree_list
 
 def rename_tree_list(tree_list,id_used,tree_name):
     i=0
-    for symbiont in symbiont_list:
-        id_used=rename_tree(symbiont,tree_name+str(i)+"_",id_used)
+    for tree in tree_list:
+        id_used=rename_tree(tree,tree_name+str(i)+"_",id_used)
         i+=1
     return id_used
 
@@ -213,7 +229,9 @@ def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None,
     if host_directory is None:
         id_used=rename_tree_list(symbiont_list,id_used,"s")
         id_used=rename_am_tree_list(am_tree_list,id_used,"g")
-        return symbiont_list, am_tree_list
+        tree_list_symbiont_list=Tree_list(symbiont_list)
+
+        return tree_list_symbiont_list, am_tree_list
     else:
         #we construct a new intermediate tree list, however,
         if inter_amalgamation:
@@ -227,9 +245,9 @@ def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None,
         id_used=rename_am_tree_list(am_tree_list,id_used,"g")
 
 
+        tree_list_host_list=Tree_list(host_list)
 
-
-        return symbiont_list, am_tree_list, host_list, inter_am_tree_list
+        return symbiont_list, am_tree_list, tree_list_host_list, inter_am_tree_list
 
 
 

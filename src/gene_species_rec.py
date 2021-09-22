@@ -8,7 +8,7 @@ Created on Thu Jan 16 14:28:33 2020
 
 import numpy as np
 
-from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match, inter_list, notl_reachable
+from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match, inter_list
 
 
 ################################
@@ -69,10 +69,6 @@ def compute_upper_gene_P(rec_problem):
     Eavg_no_log=rec_problem.upper_tree_computation.Eavg_no_log
     am_tree=rec_problem.single_lower
     P_transfer=rec_problem.upper_tree_computation.P_transfer
-
-
-    more_output=False
-
 
     mult_gene_match=is_mult_match(am_tree)
     rec_problem.rates.reinit()
@@ -140,10 +136,10 @@ def compute_upper_gene_P(rec_problem):
                     a+=Eavg_no_log
                     b_l=[]
                     if not e.isLeaf():
-                        for cL,cR in c.clade_frequencies:
+                        for cL,cR in c.log_child_frequencies:
 
                             b1=log_add(P[e.left][cL]+P[e.right][cR],P[e.left][cR]+P[e.right][cL])
-                            b1+=np.log(c.clade_frequencies[(cL,cR)])
+                            b1+=c.log_child_frequencies[(cL,cR)]
 
 
                             #b+=(P[e.left][cL]*P[e.right][cR]+P[e.left][cR]*P[e.right][cL])*clade_frequencies[c][(cL,cR)]
@@ -169,16 +165,16 @@ def compute_upper_gene_P(rec_problem):
                         #b+=E[e.right]*P_TL[e.left][c]
                         #b*=s_r
 
-                    for cL,cR in c.clade_frequencies:
+                    for cL,cR in c.log_child_frequencies:
                         if P_transfer:
                             for h in P_transfer[e].keys():
-                                b3=np.log(c.clade_frequencies[(cL,cR)])+t_r+P_transfer[e][h]+P[h][cL]+P[e][cR]
-                                b4=np.log(c.clade_frequencies[(cL,cR)])+t_r+P_transfer[e][h]+P[h][cR]+P[e][cL]
+                                b3=c.log_child_frequencies[(cL,cR)]+t_r+P_transfer[e][h]+P[h][cL]+P[e][cR]
+                                b4=c.log_child_frequencies[(cL,cR)]+t_r+P_transfer[e][h]+P[h][cR]+P[e][cL]
                                 b_l.append(b3)
                                 b_l.append(b4)
                         else:
-                            b3=np.log(c.clade_frequencies[(cL,cR)])+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cL],correction_ancestrale[e][cL])+P[e][cR]
-                            b4=np.log(c.clade_frequencies[(cL,cR)])+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cR],correction_ancestrale[e][cR])+P[e][cL]
+                            b3=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cL],correction_ancestrale[e][cL])+P[e][cR]
+                            b4=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cR],correction_ancestrale[e][cR])+P[e][cL]
                             b_l.append(b3)
                             b_l.append(b4)
 
@@ -186,7 +182,7 @@ def compute_upper_gene_P(rec_problem):
                         #b+=clade_frequencies[c][(cL,cR)]*t_r*sum([P_transfer[e][h]*P[h][cR] for h in P_transfer[e].keys()])*P[e][cL]
                         #duplication
 
-                        b6=d_r+P[e][cL]+P[e][cR]+np.log(c.clade_frequencies[(cL,cR)])
+                        b6=d_r+P[e][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]
                         b_l.append(b6)
                         #b+=d_r*P[e][cL]*P[e][cR]*clade_frequencies[c][(cL,cR)]
                     b=log_add_list(b_l)
@@ -286,8 +282,5 @@ def compute_upper_gene_P(rec_problem):
                     correction_ancestrale[e][c]=log_add(P[e][c],correction_ancestrale[e.parent][c])
 
 
-    if more_output:
-        likelihood=log_add_list([P[k][0] for k in P.keys()])
-        return P, P_TL,likelihood, correction_ancestrale_size
-    else:
-        return P
+    likelihood=log_add_list([P[k][am_tree] for k in P.keys()])
+    return P, P_TL,likelihood, correction_ancestrale_size

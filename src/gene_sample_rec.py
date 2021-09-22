@@ -14,11 +14,11 @@ from arbre import Tree
 from rec_classes import Rec_event, Rec_scenario
 
 def sample_gene_upper_rec(rec, best=False):
-    mult_gene_match=is_mult_match(rec.lower)
+    am_tree=rec.single_lower
+    mult_gene_match=is_mult_match(am_tree)
     r=dict()
 
 
-    am_tree=rec.single_lower
 
     for u in am_tree.reverse_post_order:
         r[u]=[]
@@ -36,15 +36,23 @@ def sample_gene_upper_rec(rec, best=False):
     gene=am_tree.reverse_post_order[0] #root des clades
     parasite_post_order=rec.upper.post_order
 
-    d_r= rec_problem.rates.ldr
-    l_r= rec_problem.rates.llr
-    t_r= rec_problem.rates.ltr
-    s_r= rec_problem.rates.lsr
+    d_r= rec.rates.ldr
+    l_r= rec.rates.llr
+    t_r= rec.rates.ltr
+    s_r= rec.rates.lsr
 
 
-    s=likelihood
+    s=rec.lower_tree_computation.log_l
+    P=rec.lower_tree_computation.P
+    P_TL=rec.lower_tree_computation.P_TL
+    E=rec.upper_tree_computation.E
+    P_transfer=rec.upper_tree_computation.P_transfer
+    ancestrale_correction_size=rec.lower_tree_computation.corr_size
+
     k=0
     x=np.log(rd.random())+s
+
+
     x_current=P[parasite_post_order[0]][gene]
     while x_current<x:
         k+=1
@@ -57,7 +65,7 @@ def sample_gene_upper_rec(rec, best=False):
     while len(clade_to_look)>0:
         c=clade_to_look.pop()
 
-        reconstructed_lower_node=am_tree_to_reconstructed[c]
+        reconstructed_tree_node=am_tree_to_reconstructed[c]
 
         #for c in clade_post_order:
         TL_done=False #on autorise un seul TL
@@ -113,8 +121,8 @@ def sample_gene_upper_rec(rec, best=False):
                         else:
                             l_proba.append(c.log_child_frequencies[(cL,cR)]+P[e][cR]+t_r+P[h][cL]-np.log(len(parasite_post_order)-ancestrale_correction_size[e]))
                             l_proba.append(c.log_child_frequencies[(cL,cR)]+P[e][cL]+t_r+P[h][cR]-np.log(len(parasite_post_order)-ancestrale_correction_size[e]))
-                        l_event.append(("T",e,cR, h,cL))
-                        l_event.append(("T",e,cL, h,cR))
+                        l_event.append(("T", h,cL,e,cR))
+                        l_event.append(("T",h,cR,e,cL))
                 if not TL_done:
                     if P_transfer:
                         possible_transfer=[h for h in P_transfer[e].keys()]
@@ -126,9 +134,14 @@ def sample_gene_upper_rec(rec, best=False):
                                 l_proba.append(P_TL[h][c]+t_r+E[e]+P_transfer[e][h])
                             else:
                                 l_proba.append(P_TL[h][c]+t_r+E[e]-np.log(len(parasite_post_order)-ancestrale_correction_size[e]))
-                            l_event.append(("TL", e,c,h,c))
+                            l_event.append(("TL", h,c,e,c))
                 if len(l_proba)==0:
-                    print("normalement pas besoin",TL_done, e.isLeaf(), c in c_match)
+
+                    print(len(P),len(P_TL),len(rec.single_lower.leaves),len(rec.upper.post_order), t_r,d_r,l_r,s_r)
+                    for rec_event in l_sampled_events:
+                        print(rec_event.name)
+
+                    print("normalement pas besoin",TL_done, e.isLeaf(), c.match[0].name, e.name, P[e][c], c in P_TL[e])
                     event=("TL",e,c,c_match[c],c)
                 else:
                     s=log_add_list(l_proba)
@@ -165,7 +178,7 @@ def sample_gene_upper_rec(rec, best=False):
                     event.lower_right=w
 
                     #adding new node to the reconstructed tree
-                    reconstructed_tree_node.birth()
+                    reconstructed_tree_node.undated_birth()
                     reconstructed_tree_node.left.match=r[v]
                     reconstructed_tree_node.right.match=r[w]
                     reconstructed_tree_node.left.event_list=[]
@@ -183,8 +196,12 @@ def sample_gene_upper_rec(rec, best=False):
                         TL_done=True
                     queue_species.append(event.upper_left_or_keeper_or_receiver)
 
-
+                event.init_name()
                 l_sampled_events.append(event)
+                if reconstructed_tree_node.event_list is None:
+                    reconstructed_tree_node.event_list=[]
+                else:
+                    reconstructed_tree_node.event_list.append(event)
 
             else:
                 #we got to a matching leaf
@@ -192,7 +209,7 @@ def sample_gene_upper_rec(rec, best=False):
                 event.name="E"
                 event.upper=e
                 event.lower=c
-                reconstructed_tree_node.name=c.clade_leaves[0].name
+                reconstructed_tree_node.name=c.clade_leaves[0]
                 l_sampled_events.append(event)
 
     return in_sampling_scenario

@@ -28,7 +28,7 @@ import numpy as np
 # sequential: rates_hp,match_hp, E = host_info
 
 
-def compute_transfer_prob(rec)
+def compute_transfer_prob(rec):
     heuristic=rec.heuristic
     #monte_carlo and decouple use the same process
     if heuristic in ["monte_carlo", "decouple", "sequential"]:
