@@ -107,16 +107,17 @@ def reconciliation(rec):
         if rec.heuristic=="MC":
             best=False
             rec.upper_rec.n_sample=rec.n_mc_samples
-        rec.upper.n_output_scenario=rec.n_sample
+        #rec.upper_rec.n_output_scenario=rec.n_sample
         upper_rec_sol= two_level_rec(rec.upper_rec)
         compute_upper_gene_E(rec.upper_rec)
 
-        l_scenario=upper_rec_sol.l_scenario
+        l_scenario=upper_rec_sol.scenario_list
 
         ######### done till there
 
-        rec_sol_global=Rec_sol()
+        rec_sol_global=Rec_sol(None,None,None)
         rec_sol_global.upper_divided_sol=[]
+        rec_sol_global.upper_log_likelihood=upper_rec_sol.log_likelihood
 
         for am_tree in rec.lower:
             am_tree.save_match()
@@ -136,22 +137,54 @@ def reconciliation(rec):
             rec.upper_tree_computation.P_transfer=P_transfer
             rec.upper=reconstructed_inter_list
             #we match lower to reconstructed
+
+            tree_from_name=reconstructed_inter_list.name_to_tree()
             for am_tree in rec.lower:
                 for u in am_tree.leaves:
-                    for scenario in by_fam_scenario:
-                        if u.constant_match in scenario.am_tree_to_reconstructed:
-                            u.match=scenario.am_tree_to_reconstructed_tree(u.constant_match)
+                    u.match=[tree_from_name[v.name] for v in u.constant_match]
+
             rec_sol_this_upper=two_level_rec(rec)
             rec_sol_this_upper.upper_scenario=by_fam_scenario
             rec_sol_global.upper_divided_sol.append(rec_sol_this_upper)
         log_likelihood_list=[]
-        l_event_aggregate_global=dict()
+        l_event_aggregate_global=[dict() for u in rec.lower]
+        rec_sol_global.event_list_by_fam=l_event_aggregate_global
+
+
+        seen_events=dict()
+        log_likelihood_by_gene_list=[0 for i in rec.lower]
         for rec_sol in rec_sol_global.upper_divided_sol:
-            l_event_aggregate=rec_sol.l_event_aggregate
+            l_event_by_fam=rec_sol.event_list_by_fam
             log_likelihood_list.append(rec_sol.log_likelihood)
-            for event in l_event_aggregate:
-                l_event_aggregate[event]/=n_sample_MC
+            for i_gene in range(len(rec_sol.log_likelihood_by_gene)):
+                log_likelihood_by_gene_list[i_gene]+=rec_sol.log_likelihood_by_gene[i_gene]
+
+            for (l_event,l_event_global) in zip(l_event_by_fam,l_event_aggregate_global):
+                for event in l_event:
+                    ekey=event.key()
+                    if not ekey in seen_events:
+                        seen_events[ekey]=event
+                        new_event=event
+                    else:
+                        new_event=seen_events[ekey]
+
+
+                    l_event_global.setdefault(new_event,0)
+                    l_event_global[new_event]+=l_event[event]
+
+
+
+
+        for l_event in l_event_aggregate_global:
+            for event in l_event:
+                l_event[event]/=n_sample_MC
         log_likelihood=log_add_list(log_likelihood_list) - np.log(n_sample_MC)
-        return
+        rec_sol_global.log_likelihood=log_likelihood
+
+        for i_gene in range(len(log_likelihood_by_gene_list)):
+            log_likelihood_by_gene_list[i_gene]/=n_sample_MC
+        rec_sol_global.log_likelihood_by_gene=log_likelihood_by_gene_list
+
+        return rec_sol_global
     else:
         return two_level_rec(rec)

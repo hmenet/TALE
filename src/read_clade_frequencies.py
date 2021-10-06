@@ -224,7 +224,7 @@ def from_rooted_tree_to_clades(tree):
         c+=1
 
     amalgamated_tree=Amalgamated_tree()
-    amalgamated_tree.initialize(clade_elements,clade_frequencies,corresponding_clade_to_tree=tree_to_clade)
+    amalgamated_tree.initialize(clade_elements,clade_frequencies,corresponding_clade_to_tree=clade_to_tree)
 
     return amalgamated_tree
 

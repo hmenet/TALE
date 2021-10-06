@@ -25,6 +25,8 @@ class Tree:
         self.isGeneTree=False
         self.isFreeLiving=False
         
+        self.added_for_free_living=False
+        
         #attributes used for simulation
         #not known for real data
         self.time = None #end time of the specie (of its branch)
@@ -77,14 +79,20 @@ class Tree:
         if self.isLeaf():
             return [self]
         else:
-            return [self]+self.left.liste() + self.right.liste()
+            if self.right2 is None:
+                return [self]+self.left.liste() + self.right.liste()
+            else:
+                return [self]+self.left.liste() + self.right.liste()+self.right2.liste()
     
     #return the lsit of all leaves of the subtree starting at self
     def leaves(self):
         if self.isLeaf():
             return [self]
         else:
-            return self.right.leaves() + self.left.leaves()
+            if self.right2 is None:
+                return self.right.leaves() + self.left.leaves()
+            else: 
+                return self.right.leaves() + self.left.leaves() + self.right2.leaves()
         
     def leaves_unrooted(self):
         if self.isLeaf():
@@ -366,9 +374,12 @@ class Tree:
     #return a list of the nodes of the tree in a post order traversal
     #we will use it with pop, so in fact it's the reverse of a post order
     def post_order_traversal(self):
-        t=[self]
-        if not self.isLeaf():
-            t=t+self.left.post_order_traversal()+self.right.post_order_traversal()
+        if self.right2 is None:
+            t=[self]
+            if not self.isLeaf():
+                t=t+self.left.post_order_traversal()+self.right.post_order_traversal()
+        else:
+            return self.post_order_traversal_unrooted()
         return t
     
     def post_order_traversal_unrooted(self):
@@ -490,6 +501,7 @@ class Tree:
             return self
         else:
             return (self.parent).n_leaves_ancestor(n)
+
 
 
 #node1 is ascendant (not strictly) to node 2, we want the distance between them in the tree

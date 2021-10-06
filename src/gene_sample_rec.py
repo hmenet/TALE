@@ -30,6 +30,7 @@ def sample_gene_upper_rec(rec, best=False):
     am_tree_to_reconstructed[am_tree]=reconstructed_lower
     reconstructed_lower.corresponding_am_tree=am_tree
     reconstructed_lower.name=am_tree.name
+    reconstructed_lower.tree_name=am_tree.tree_name
 
     l_sampled_events=in_sampling_scenario.event_list#list of all the events that compose the scenario we will have sampled at the end of this function
 
@@ -59,7 +60,7 @@ def sample_gene_upper_rec(rec, best=False):
         x_current=log_add(x_current, P[parasite_post_order[k]][gene])
     #il faudrait des proba d'origination
     r[gene].append(parasite_post_order[k])
-
+    reconstructed_lower.match=r[gene]
 
     clade_to_look=[gene]
     while len(clade_to_look)>0:
@@ -196,7 +197,7 @@ def sample_gene_upper_rec(rec, best=False):
                         TL_done=True
                     queue_species.append(event.upper_left_or_keeper_or_receiver)
 
-                event.init_name()
+                event.init_name(third_level=rec.third_level)
                 l_sampled_events.append(event)
                 if reconstructed_tree_node.event_list is None:
                     reconstructed_tree_node.event_list=[]
@@ -210,6 +211,12 @@ def sample_gene_upper_rec(rec, best=False):
                 event.upper=e
                 event.lower=c
                 reconstructed_tree_node.name=c.clade_leaves[0]
+                event.init_name(third_level=rec.third_level)
                 l_sampled_events.append(event)
+                if reconstructed_tree_node.event_list is None:
+                    reconstructed_tree_node.event_list=[]
+                else:
+                    reconstructed_tree_node.event_list.append(event)
+
 
     return in_sampling_scenario

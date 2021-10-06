@@ -62,13 +62,11 @@ def prob_transfer_alea(rec):
 def prob_transfer_sequential(rec, inter_list):
     host_post_order=rec.upper.post_order
 
-    match_hp
-
-    E=rec.upper_tree_computation.E
-    d_r= rec.rates.ldr
-    l_r= rec.rates.llr
-    t_r= rec.rates.ltr
-    s_r=rec.rates.lsr
+    E=rec.upper_tree_computation.E_no_log
+    d_r= rec.rates.dr
+    l_r= rec.rates.lr
+    t_r= rec.rates.tr
+    s_r=rec.rates.sr
     #on calcule d'abord la proba de transfert entre de gène de parasite sachant l'hôte de chacun des parasites
     P_transfer_h=dict()
     #P_transfer_h[h1][h2] : proba de transfert de gène entre un parasite placé dans l'hôte h1 et un dans l'hôte h2
@@ -138,9 +136,10 @@ def prob_transfer_sequential(rec, inter_list):
                     P_transfer_h[e][target_e]=P[e]
     P_transfer=dict()
     #P_transfer[p1][p2] : proba de transférer entre les parasites p1 et p2
-    for p1 in parasite_post_order:
+
+    for p1 in inter_list.post_order:
         P_transfer[p1]=dict()
-        for p2 in parasite_post_order:
+        for p2 in inter_list.post_order:
             if (not p1 == p2) and (not p2.isAscendant(p1)):
                 p_transfertmp=sum([sum([P_transfer_h[h1][h2] for h1 in p1.match])for h2 in p2.match])
                 if p_transfertmp != 0:

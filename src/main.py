@@ -67,13 +67,15 @@ parser.add_argument("-tlh", "--three_level_heuristic", default="MC", help="heuri
 parser.add_argument("-tlMCs", "--three_level_MC_sample", default=10, type=int, help="number of samples of upper intermediate reconciliation for monte carlo heuristic of 3 level reconciliation")
 parser.add_argument("-inre", "--inter_n_rates_estimation_steps", type=int, default=5, help="number of steps in the rates estimation process for the inter upper rec, for each step we compute likelihood of reconciliation and set rates to the observed frequency for each events")
 parser.add_argument("-inres", "--inter_n_rates_estimation_rec_sample", type=int, default=100, help="in the rates estimation process of inter and upper, number of scenarios sampled to estimate event frequencies")
+parser.add_argument("-ins", "--inter_n_rec_sample", type=int, default=100, help="number of reconciliation scenarios sampled to compute events frequency for the inter upper reconciliation")
+parser.add_argument("-insr", "--inter_n_rec_sample_rates", type=int, default=100, help="number of reconciliation scenarios sampled to compute events frequency for the inter upper reconciliation for rate inference")
 parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
 parser.add_argument("-dr", "--duplication_rate", default=0.01, type=float, help="initial duplication rate.")
 parser.add_argument("-tr", "--transfer_rate", default=0.01, type=float, help="initial transfer rate.")
 parser.add_argument("-lr", "--loss_rate", default=0.01, type=float, help="initial loss rate.")
-parser.add_argument("-idr", "--inter_duplication_rate", default=0.05, type=float, help="initial inter duplication rate.")
-parser.add_argument("-itr", "--inter_transfer_rate", default=0.05, type=float, help="initial inter transfer rate.")
-parser.add_argument("-ilr", "--inter_loss_rate", default=0.05, type=float, help="initial inter loss rate.")
+parser.add_argument("-idr", "--inter_duplication_rate", default=0.01, type=float, help="initial inter duplication rate.")
+parser.add_argument("-itr", "--inter_transfer_rate", default=0.01, type=float, help="initial inter transfer rate.")
+parser.add_argument("-ilr", "--inter_loss_rate", default=0.01, type=float, help="initial inter loss rate.")
 parser.add_argument("-ilo", "--inter_less_output", action="store_true", help="for three level, output only event frequency by gene family and no summation files")
 parser.add_argument("-ia","--inter_amalgamation",action="store_true",help="for three level, the intermediate level can be input as a list of trees as a density for amalgamation")
 
@@ -82,12 +84,8 @@ args=parser.parse_args()
 if args.verbose:
     print("verbosity turned on")
 
-if args.third_upper_level and args.heuristic!="unaware":
-    if args.inter_amalgamation:
-        symbiont_list, am_tree_list, host_list, inter_am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file, host_directory=args.third_upper_level, host_matching_file=args.inter_match_file, host_matching_dir=args.inter_match_dir, inter_amalgamation=args.inter_amalgamation)
-    else:
-        symbiont_list, am_tree_list, host_list, inter_am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file, host_directory=args.third_upper_level, host_matching_file=args.inter_match_file, host_matching_dir=args.inter_match_dir, inter_amalgamation=args.inter_amalgamation)
-
+if args.third_upper_level and args.three_level_heuristic!="unaware":
+    symbiont_list, am_tree_list, host_list, inter_am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file, host_directory=args.third_upper_level, host_matching_file=args.inter_match_file, host_matching_dir=args.inter_match_dir, inter_amalgamation=args.inter_amalgamation)
 
 
     #test for free living
@@ -95,13 +93,21 @@ if args.third_upper_level and args.heuristic!="unaware":
     if args.verbose:
         print(inter_c_match_list)
 
+    d=symbiont_list.name_to_tree()
     for inter_am_tree in inter_am_tree_list:
-        for c in inter_am_tree.post_order:
+        for u in inter_am_tree.leaves:
+            u.corresponding_tree=d[u.name]
+
+    for inter_am_tree in inter_am_tree_list:
+        for c in inter_am_tree.reverse_post_order:
             if c.is_leaf() and c.match is None:
-                c.match = c.corresponding_tree
+                if args.verbose:
+                    print("FREE LIVING detected")
+                c.match = [c.corresponding_tree]
                 symbiont=c.corresponding_tree.root
                 if not symbiont in host_list:
                     host_list.append(symbiont)
+                    symbiont.added_for_free_living=True
 
 
     rec_upper_problem=Rec_problem(symb_list=host_list,amal_genes=inter_am_tree_list)
@@ -111,7 +117,7 @@ if args.third_upper_level and args.heuristic!="unaware":
     rec_upper_problem.n_rec_sample_rates = args.inter_n_rec_sample_rates
     rec_upper_problem.rates = Event_rates(tr=args.inter_transfer_rate,lr=args.inter_loss_rate,dr=args.inter_duplication_rate)
     rec_upper_problem.ncpu = args.n_cpu_multiprocess
-    rec_upper_problem.multiprocess_fam=args.multiprocess_fam
+    #rec_upper_problem.multiprocess_fam=args.multiprocess_fam
     rec_upper_problem.n_output_scenario=args.inter_n_recphyloxml
 
 
@@ -156,7 +162,6 @@ def rec_and_output(rec):
         t1=time.perf_counter()
         gene_rates_ml(rec.upper_rec)
         cmpt_time=time.perf_counter()-t1
-        rec.upper_rec.lower_tree_computation.time=cmpt_time
         print("Upper inter rates estimated in ", cmpt_time, " s")
         print("Upper rates", rec.upper_rec.rates.pp())
 
@@ -198,16 +203,16 @@ def rec_and_output(rec):
 
     for i_upper_scenario in range(n_upper_scenario):
         if rec.third_level:
-            out_file_name=out_file+str(i_upper_scenario)+"upper"+".recphyloxml"
-            save_recphyloxml_from_rec(rec.upper_rec,upper_scenario, out_file_name)
-            lower_scenario_list=rec_sol.upper_divided_sol[i_upper_scenario].scenario_list
             rec_sol_to_use=rec_sol.upper_divided_sol[i_upper_scenario]
+            out_file_name=out_file+str(i_upper_scenario)+"upper"+".recphyloxml"
+            save_recphyloxml_from_rec(rec.upper_rec,rec_sol.upper_divided_sol[i_upper_scenario].upper_scenario, out_file_name,rec_sol)
+            lower_scenario_list=rec_sol.upper_divided_sol[i_upper_scenario].scenario_list
         else:
             lower_scenario_list=rec_sol.scenario_list
             rec_sol_to_use=rec_sol
         i_recphylo=0
         for lower_scenario in lower_scenario_list:
-            if rec.best_rec and i_recphyloxml==0:
+            if rec.best_rec and i_recphylo==0:
                 out_file_name=out_file+str(i_upper_scenario)+"u_"+str(i_recphylo)+"_best"+".recphyloxml"
             else:
                 out_file_name=out_file+str(i_upper_scenario)+"u_"+str(i_recphylo)+".recphyloxml"
@@ -217,7 +222,7 @@ def rec_and_output(rec):
 
     #frequency per gene output
     if rec.n_sample>0:
-        output_frequency_for_all_family(rec_sol.event_list_by_fam, rec, output_file=out_file+"freq")
+        output_frequency_for_all_family(rec_sol.event_list_by_fam, rec, rec_sol.log_likelihood_by_gene,output_file=out_file+"freq")
 
 ################$
 

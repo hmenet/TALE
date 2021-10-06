@@ -11,6 +11,8 @@ Created on Thu Jan 16 14:17:16 2020
 #######################
 
 import arbre
+import numpy as np
+
 
 from rec_aux_func import is_mult_match
 
@@ -35,6 +37,7 @@ def rec_to_string(tree_node,transfer_back=False,transfer_back_specie=None):
         s+="<transferBack destinationSpecies=\"" + transfer_back_specie +"\"/>"
     transfer_back=False
     le=tree_node.event_list
+    #print(len(le),[(e.name,e.upper) for e in le])
     for e in le:
         e1=e.upper
         e0=e.name
@@ -55,13 +58,17 @@ def rec_to_string(tree_node,transfer_back=False,transfer_back_specie=None):
             n_loss+=1
             s+=" <name>"+innername+"LOSS"+"</name>\n"
             s+="<eventsRec>\n"
-            s+="<loss speciesLocation=\"" + e.upper_right_or_loser_or_donor +"\"/>"
+            if e1 =="FREE_LIVING":
+                s+="<loss speciesLocation=\"" + e1 +"\"/>"
+            else:
+                s+="<loss speciesLocation=\"" + e.upper_right_or_loser_or_donor +"\"/>"
             s+="</eventsRec>\n"
             s+="</clade>\n"
             s+="<clade>\n"
             innername=innername+".l"
             s+=" <name>"+innername+"</name>\n"
             s+="<eventsRec>\n"
+
         if e0 =="TL":
             s+="<branchingOut speciesLocation=\"" + e1 +"\"/>"
             s+="\n"
@@ -70,7 +77,13 @@ def rec_to_string(tree_node,transfer_back=False,transfer_back_specie=None):
             n_loss+=1
             s+=" <name>"+innername+"LOSS"+"</name>\n"
             s+="<eventsRec>\n"
-            s+="<loss speciesLocation=\"" + e.upper_right_or_loser_or_donor +"\"/>"
+
+            if e1 =="FREE_LIVING":
+                s+="<loss speciesLocation=\"" + e1 +"\"/>"
+            else:
+                s+="<loss speciesLocation=\"" + e.upper_right_or_loser_or_donor +"\"/>"
+
+
             s+="</eventsRec>\n"
             s+="</clade>\n"
             s+="<clade>\n"
@@ -92,9 +105,10 @@ def save_recphyloxml(rec,rec_scenario_by_fam,file):
     f=open(file, "w")
     f.write("<recPhylo>\n")
     for host_tree in rec.upper.tree_list:
-        f.write("<spTree>\n<phylogeny>\n")
-        f.write(tree_to_string(host_tree))
-        f.write("</phylogeny>\n</spTree>\n\n")
+        if not host_tree.added_for_free_living:
+            f.write("<spTree>\n<phylogeny>\n")
+            f.write(tree_to_string(host_tree))
+            f.write("</phylogeny>\n</spTree>\n\n")
     id_counter=1
     for rec_scenario in rec_scenario_by_fam:
         f.write("<recGeneTree>\n<phylogeny rooted=\"true\"><id>"+str(id_counter)+"</id>")
@@ -104,29 +118,32 @@ def save_recphyloxml(rec,rec_scenario_by_fam,file):
     f.write("</recPhylo>\n")
     f.close()
 
-def free_living_check(reconstructed_tree):
-    for u in reconstructed_tree.post_order_traversal():
-        for e in u.event_list:
-            if e.upper==e.lower:
-                e.upper="FREE_LIVING"
 
 
 #additional info not found in the recphyloxml, such as likelihood
-def output_recphyloxml_additional_info(rec,rec_sol, file):
-    s="log likelihood symbiont gene:" + str(rec.lower_tree_computation.log_l) + "\n"
-    s+=rec.rates.pp()
-    if rec.third_level:
-        s="log likelihood host symbiont:" + str(rec_sol.upper_scenario.log_likelihood) + "\n"
-        s+=rec.upper_rec.rates.pp()
+def output_recphyloxml_additional_info(rec,rec_sol, file,rec_scenario_by_fam):
+    s="log likelihood symbiont gene:" + str(rec_sol.log_likelihood) + "\n"
+    if not rec_sol.upper_log_likelihood is None:
+        s+="log likelihood host symbiont:" + str(rec_sol.upper_log_likelihood) + "\n"
+    lower_scenario_likelihood=sum([scen.log_likelihood for scen in rec_scenario_by_fam])
+    s+="log likelihood symbiont gene scenario:" + str(lower_scenario_likelihood) + "\n"
+    s+=rec.rates.pp()+"\n"
+    #if rec.third_level:
+    #    upper_scenario_likelihood=np.log(sum([np.exp(u.log_likelihood) for u in rec_sol.upper_scenario]))
+
+    #    s="log likelihood host symbiont:" + str(rec_sol.log_likelihood) + "\n"
+    #   s+="log likelihood host symbiont scenario:" + str(upper_scenario_likelihood) + "\n"
+    #    s+=rec.upper_rec.rates.pp()+"\n"
+    #    s+="heuristic:"+rec.heuristic
 
     s+="time (in s):"+str(rec.lower_tree_computation.time)
 
-    s+="heuristic:"+rec.heuristic
+    f=open(file,"w")
+    f.write(s)
+
 
 
 def save_recphyloxml_from_rec(rec,rec_scenario_by_fam,file, rec_sol):
-    for rec_scenario in rec_scenario_by_fam:
-        free_living_check(rec_scenario.reconstructed_lower)
     save_recphyloxml(rec, rec_scenario_by_fam,file)
-    output_recphyloxml_additional_info(rec,rec_sol,file+".additional_info")
+    output_recphyloxml_additional_info(rec,rec_sol,file+".additional_info",rec_scenario_by_fam)
 

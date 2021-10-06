@@ -169,10 +169,13 @@ def rename_tree(tree,root_name,n):
 
 
 
-def read_input_2levels(symbiont_directory, gene_directory=None, leaf_matching_directory=None, leaf_matching_file=None, inter=False, inter_list=None, inter_file_list=None):
+def read_input_2levels(symbiont_directory, gene_directory=None, leaf_matching_directory=None, leaf_matching_file=None, inter=False, inter_list=None, inter_file_list=None,inter_amalgamation=False):
     symbiont_list, symbiont_file_list=construct_tree_list(symbiont_directory, amalgamation=False)
-    if gene_directory == None:
-        gene_list, gene_file_list=inter_list, inter_file_list
+    if gene_directory is None:
+        if inter_amalgamation:
+            gene_list, gene_file_list=construct_tree_list(gene_directory, amalgamation=True)
+        else:
+            gene_list, gene_file_list=inter_list, inter_file_list
     else:
         gene_list, gene_file_list=construct_tree_list(gene_directory, amalgamation=True)
     if inter:
@@ -193,7 +196,7 @@ def read_input_2levels(symbiont_directory, gene_directory=None, leaf_matching_di
                 for u in symbiont.leaves():
                     if not u.name in symbiont_name_to_tree:
                         symbiont_name_to_tree[u.name]=[]
-                    symbiont_name_to_tree[u.name].append[u]
+                    symbiont_name_to_tree[u.name].append(u)
             for am_tree in am_tree_list:
                 for u in am_tree.reverse_post_order:
                     if u.is_leaf():
@@ -216,6 +219,8 @@ def rename_am_tree_list(am_tree_list,id_used,tree_name):
             if not clade.is_leaf():
                 clade.name=tree_name+str(i)+"_"+str(id_used)
                 id_used+=1
+            else:
+                clade.name=clade.clade_leaves[0]
         i+=1
     return id_used
 
@@ -226,6 +231,8 @@ def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None,
 
     id_used=0 #we give a unique id as a name to all non leaves nodes in all trees
 
+
+
     if host_directory is None:
         id_used=rename_tree_list(symbiont_list,id_used,"s")
         id_used=rename_am_tree_list(am_tree_list,id_used,"g")
@@ -233,9 +240,12 @@ def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None,
 
         return tree_list_symbiont_list, am_tree_list
     else:
+
+        symbiont_file_list=[symbiont.tree_name for symbiont in symbiont_list]
+
         #we construct a new intermediate tree list, however,
         if inter_amalgamation:
-            host_list, inter_am_tree_list=read_input_2levels(host_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=False,inter_file_list=symbiont_file_list)
+            host_list, inter_am_tree_list=read_input_2levels(host_directory, gene_directory=symbiont_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=False,inter_file_list=symbiont_file_list,inter_amalgamation=True)
         else:
             host_list, inter_am_tree_list=read_input_2levels(host_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=True, inter_file_list=symbiont_file_list)
 
@@ -244,10 +254,15 @@ def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None,
         id_used=rename_am_tree_list(inter_am_tree_list,id_used,"s")
         id_used=rename_am_tree_list(am_tree_list,id_used,"g")
 
-
+        tree_list_symbiont_list=Tree_list(symbiont_list)
         tree_list_host_list=Tree_list(host_list)
 
-        return symbiont_list, am_tree_list, tree_list_host_list, inter_am_tree_list
+        #for am_tree in inter_am_tree_list:
+        #    print(am_tree.tree_name)
+        #for symbiont in symbiont_list:
+        #    print(symbiont.tree_name)
+
+        return tree_list_symbiont_list, am_tree_list, tree_list_host_list, inter_am_tree_list
 
 
 

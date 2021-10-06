@@ -51,6 +51,19 @@ class Tree_list:
     def __next__(self):
         return self.tree_list.__next__()
 
+
+    def append(self,new_tree):
+        self.tree_list.append(new_tree)
+        self.post_order_traversal()
+
+    def name_to_tree(self):
+        d=dict()
+        for tree in self.tree_list:
+            tmpd=tree.name_to_tree()
+            for k in tmpd:
+                d[k]=tmpd[k]
+        return d
+
 ##############
 
 
@@ -140,18 +153,20 @@ class Amalgamated_tree:
         self.leaves=None
         self.constant_match=None
         self.name=None
+        self.root=self
 
     def aux_init(self,clade_elements,clade_frequencies,clade_id,d,corresponding_clade_to_tree=None):
         self.clade_leaves=clade_elements[clade_id]
         if not corresponding_clade_to_tree is None:
-            self.corresponding_tree=corresponding_clade_to_tree(clade_id)
+            self.corresponding_tree=corresponding_clade_to_tree[clade_id]
         new_clade_frequencies=dict()
         for (cl,cr) in clade_frequencies[clade_id]:
             new_cs=[]
             for c in [cl,cr]:
                 if not c in d:
                     new_c=Amalgamated_tree()
-                    new_c.aux_init(clade_elements,clade_frequencies,c,d)
+                    new_c.root=self.root
+                    new_c.aux_init(clade_elements,clade_frequencies,c,d,corresponding_clade_to_tree=corresponding_clade_to_tree)
                     d[c]=new_c
                 else:
                     new_c=d[c]
@@ -219,6 +234,12 @@ class Amalgamated_tree:
         for clade in self.reverse_post_order:
             clade.constant_match=clade.match
 
+    def name_to_tree(self):
+        d=dict()
+        for u in self.reverse_post_order:
+            d[u.name]=u
+        return d
+
 
 ##################$$
 
@@ -246,11 +267,25 @@ class Rec_event:
             l.append(d[k])
         return tuple(l)
 
-    def init_name(self):
+    def init_name(self,third_level=False):
+        #if self.lower.root.tree_name!="gene.nwk" and self.upper.root.tree_name!="host.nwk" and self.upper.root.tree_name!=self.lower.root.tree_name:
+        #    print(self.upper.root.tree_name,self.lower.root.tree_name)
+        if self.upper.root.tree_name==self.lower.root.tree_name:
+            self.upper = "FREE_LIVING"
         d=vars(self)
+        if third_level:
+            self.upper_match=self.upper.match
+            if not self.upper_left_or_keeper_or_receiver is None:
+                self.upper_left_match=self.upper_left_or_keeper_or_receiver.match
+            if not self.upper_right_or_loser_or_donor is None:
+                self.upper_right_match=self.upper_right_or_loser_or_donor.match
         for key in d:
-            if (not (d[key] is None)) and not key=="name":
-                d[key]=d[key].name
+            if (not (d[key] is None)) and not key=="name" and not d[key]=="FREE_LIVING":
+                if type(d[key]) == list:
+                    d[key]=tuple([u.name for u in d[key]])
+                else:
+                    d[key]=d[key].name
+
 
 
 class Rec_scenario:
@@ -270,6 +305,7 @@ class Rec_sol:
         self.upper_divided_sol=None
         self.log_likelihood_by_gene=None
         self.upper_scenario=None
+        self.upper_log_likelihood=None
 
 
 
