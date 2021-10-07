@@ -90,9 +90,6 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
 
     #test for free living
 
-    if args.verbose:
-        print(inter_c_match_list)
-
     d=symbiont_list.name_to_tree()
     for inter_am_tree in inter_am_tree_list:
         for u in inter_am_tree.leaves:
