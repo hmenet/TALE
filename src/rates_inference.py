@@ -14,7 +14,7 @@ from reconciliation import reconciliation
 
 ####### to do ######
 
-def count_events(l_event, min_rate=0.0001):
+def count_events(l_event, min_rate=0.0001,non_used_events=[]):
     d=dict()
     d["S"]=0
     d["L"]=0
@@ -31,7 +31,7 @@ def count_events(l_event, min_rate=0.0001):
     added=0
     for c in d.keys():
         d[c]=d[c]/total
-        if d[c]<=min_rate and d[c]>0:
+        if d[c]<=min_rate and not c in non_used_events:
             d[c]=min_rate
             added+=min_rate
     to_retrieve=added/len([d[c] for c in d.keys() if d[c]>2*min_rate])
@@ -52,7 +52,9 @@ def gene_rates_ml(rec):
     i_steps=0
     while i_steps < rec.n_steps :
         rec_sol=reconciliation(rec)
-        rates=count_events(rec_sol.event_list_by_fam)
+        if rec.rates.ir ==0 :
+            non_used_events=["I"]
+        rates=count_events(rec_sol.event_list_by_fam,non_used_events=non_used_events)
         rec.rates.dr=rates["D"]
         rec.rates.tr=rates["T"]
         rec.rates.lr=rates["L"]
