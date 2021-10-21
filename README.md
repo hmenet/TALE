@@ -123,10 +123,12 @@ Usage:
 
 # todo :
 
++ input recphyloxml as upper reconciliation
++ add warning if reading non binary tree or unrooted
++ output additional recphylo
 + possibility for null transfer rate
 + what happen if rooted gene tree
 + output file names
-+ possibility to match from lower to upper and erwinia example -> to test
 + save amalgamation
 + more verbose
 + commenting and renaming pass (for upper/intermediate/lower vocab) 
@@ -145,7 +147,7 @@ Usage:
 
 + ex_pylori 3 level : 
 
-		python3 src/main.py example_data/ex_pylori/pop_pylori/ example_data/ex_pylori/genes_sub2/ -nre 0 -mfile example_data/ex_pylori/matching_pop_genes -tl example_data/ex_pylori/upper_level/ -imf example_data/ex_pylori/matching_pop_geo -mp
+		python3 src/main.py example_data/ex_pylori/pop_pylori/ example_data/ex_pylori/genes_sub2/ -nre 0 -mfile example_data/ex_pylori/matching_pop_genes -tl example_data/ex_pylori/upper_level/ -imf example_data/ex_pylori/matching_pop_geo -mpf
 		
 + ex_ALE : example given in ALE git (https://github.com/ssolo/ALE), with amalgamation
 

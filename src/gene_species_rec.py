@@ -22,14 +22,16 @@ def solution_polynome_snd(a,b,c):
 
 
 #pareil que TL_compute_parasite_E_5_order mais peut prendre une lsite de parasite en entrée en donnant la concatenation des post order de ces parasites
-def compute_upper_gene_E(upper_post_order, rates, P_transfer=None):
-    d_r= rates["D"]
-    l_r= rates["L"]
-    t_r= rates["T"]
-    s_r=1-d_r-l_r-t_r
+def compute_upper_gene_E(rec, P_transfer=None):
+    d_r= rec.rates.dr
+    l_r= rec.rates.lr
+    t_r= rec.rates.tr
+    rec.rates.reinit()
+    s_r=rec.rates.sr
     E=dict()
-    queue=list(upper_post_order)
+    queue=list(rec.upper.post_order)
     Eavg=dict()
+    upper_post_order=rec.upper.post_order
     for h in upper_post_order:
         tmp=l_r
         tmp+=d_r*l_r*l_r
@@ -42,33 +44,41 @@ def compute_upper_gene_E(upper_post_order, rates, P_transfer=None):
     while len(queue)>0:
         e=queue.pop()
         a=d_r
-        #b= -1 + t_r*sum([P_t[e][h]*Eavg[h] for h in P_t[e].keys()])
-
         l_tmp=e.ancestor()
         correction_ancestral=sum([t_r*Eavg[h] for h in l_tmp])
         b=-1 + (Eavg1-correction_ancestral)/(len(upper_post_order)-len(l_tmp))
-
         c=l_r
         if not e.isLeaf():
             c+=s_r*E[e.left]*E[e.right]
         E[e]=solution_polynome_snd(a,b,c)
-
     Eavg_no_log=(-1)/len(upper_post_order)*sum([t_r*E[h] for h in upper_post_order])
+    E_log=dict()
     for h in E.keys():
-        E[h]=np.log(E[h])
-
-    return E, Eavg_no_log
+        E_log[h]=np.log(E[h])
+    #return
+    rec.upper_tree_computation.Eavg_no_log=Eavg_no_log
+    rec.upper_tree_computation.E_no_log=E
+    rec.upper_tree_computation.E=E_log
 
 
 #proba de transfert pre processed, dans P_transfer[e][e2] de e vers e2
 #c_match = clade_to_matched_node
-def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_match, more_output=False, P_transfer=None):
-    mult_gene_match=is_mult_match(c_match)
-    d_r= np.log(rates["D"])
-    l_r= np.log(rates["L"])
-    t_r= np.log(rates["T"])
-    s_r=np.log(1-rates["D"]-rates["L"]-rates["T"])
-    clade_post_order, clade_frequencies, clade_elements, clade_keys=clades_data
+def compute_upper_gene_P(rec_problem):
+
+    E=rec_problem.upper_tree_computation.E
+    Eavg_no_log=rec_problem.upper_tree_computation.Eavg_no_log
+    am_tree=rec_problem.single_lower
+    P_transfer=rec_problem.upper_tree_computation.P_transfer
+
+    mult_gene_match=is_mult_match(am_tree)
+    rec_problem.rates.reinit()
+    d_r= rec_problem.rates.ldr
+    l_r= rec_problem.rates.llr
+    t_r= rec_problem.rates.ltr
+    s_r= rec_problem.rates.lsr
+    i_r=rec_problem.rates.lir
+    upper_post_order=rec_problem.upper.post_order
+
     P=dict()
     P_TL=dict()
     P_avg=dict()
@@ -90,41 +100,32 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                 correction_ancestrale_size[e]=correction_ancestrale_size[e.parent]
 
     if not mult_gene_match:
-        for c in c_match:
-            #print(c, c_match[c].root.name, c_match[c].root)
-            P[c_match[c]][c]=0
-            P_TL[c_match[c]][c]=0
+        for c in am_tree.leaves:
+            P[c.match][c]=0
+            P_TL[c.match][c]=0
     else:
-        for c in c_match:
+        for c in am_tree.leaves:
             #c_match[c] si mult match c'est une liste
-            for species_tmp in c_match[c]:
-                P[species_tmp][c]=(-1)*np.log(len(c_match[c]))
-                P_TL[species_tmp][c]=(-1)*np.log(len(c_match[c]))
-    clade_queue=list(clade_post_order)
+            for species_tmp in c.match:
+                P[species_tmp][c]=(-1)*np.log(len(c.match))
+                P_TL[species_tmp][c]=(-1)*np.log(len(c.match))
 
-
-    #for c in clade_post_order:
-    #    for e in P.keys():
-    #        if not c in P[e]:
-    #            P[e][c]=0
-    #for c in clade_post_order:
-    #    for u in clades_data[2][c]:
-    #        if sum([P[e][clades_data[3][tuple([u])]] for e in P.keys()]) != 1 :
-    #            print("hey",u,clades_data[3][tuple([u])], sum([P[e][clades_data[3][tuple([u])]] for e in P.keys()]))
+    clade_queue=list(am_tree.reverse_post_order)
 
     while len(clade_queue)>0:
         c=clade_queue.pop()
         upper_queue=list(upper_post_order)
         a_store=dict()
         b_store=dict()
+        #reachable_notl=notl_reachable(c,mult_gene_match)
         while len(upper_queue)>0:
             e=upper_queue.pop()
             if not mult_gene_match:
-                bool_continue_mult_match=not (c in c_match.keys() and c_match[c]==e)
-                bool_continue_mult_match2=not(c in c_match.keys()) or (c_match[c] in e.leaves())
+                bool_continue_mult_match=not (c.match==e)
+                bool_continue_mult_match2=not(c.is_leaf()) or (c.match in e.leaves())
             else:
-                bool_continue_mult_match=not (c in c_match.keys() and e in c_match[c])
-                bool_continue_mult_match2=not(c in c_match.keys()) or (inter_list(c_match[c],e.leaves()))
+                bool_continue_mult_match=not (c.is_leaf() and e in c.match)
+                bool_continue_mult_match2=not(c.is_leaf()) or (inter_list(c.match,e.leaves()))
             if bool_continue_mult_match:
                 if bool_continue_mult_match2:
                     #a=1
@@ -136,19 +137,19 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                     a+=Eavg_no_log
                     b_l=[]
                     if not e.isLeaf():
-                        for cL,cR in clade_frequencies[c]:
+                        for cL,cR in c.log_child_frequencies:
 
                             b1=log_add(P[e.left][cL]+P[e.right][cR],P[e.left][cR]+P[e.right][cL])
-                            b1+=np.log(clade_frequencies[c][(cL,cR)])
+                            b1+=c.log_child_frequencies[(cL,cR)]+s_r
 
 
                             #b+=(P[e.left][cL]*P[e.right][cR]+P[e.left][cR]*P[e.right][cL])*clade_frequencies[c][(cL,cR)]
                             b_l.append(b1)
-                        if c in c_match.keys():
+                        if c.is_leaf():
                             if mult_gene_match:
-                                c_match_c=c_match[c]
+                                c_match_c=c.match
                             else:
-                                c_match_c=[c_match[c]]
+                                c_match_c=[c.match]
                             if inter_list(c_match_c, e.right.leaves()):
                                 b21=E[e.left]+P_TL[e.right][c]+s_r
                                 b_l.append(b21)
@@ -165,26 +166,46 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                         #b+=E[e.right]*P_TL[e.left][c]
                         #b*=s_r
 
-                    for cL,cR in clade_frequencies[c]:
+                    #incomplete sorting event
+                    if not i_r is None:
+                        if not e.isLeaf():
+                            for cL,cR in c.log_child_frequencies:
+
+                                b7=P[e.left][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]+i_r
+                                b8=P[e.left][cR]+P[e][cL]+c.log_child_frequencies[(cL,cR)]+i_r
+                                b9=P[e.right][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]+i_r
+                                b10=P[e.right][cR]+P[e][cL]+c.log_child_frequencies[(cL,cR)]+i_r
+
+                                b_l.append(b7)
+                                b_l.append(b8)
+                                b_l.append(b9)
+                                b_l.append(b10)
+
+
+                    for cL,cR in c.log_child_frequencies:
                         if P_transfer:
                             for h in P_transfer[e].keys():
-                                b3=np.log(clade_frequencies[c][(cL,cR)])+t_r+P_transfer[e][h]+P[h][cL]+P[e][cR]
-                                b4=np.log(clade_frequencies[c][(cL,cR)])+t_r+P_transfer[e][h]+P[h][cR]+P[e][cL]
+                                b3=c.log_child_frequencies[(cL,cR)]+t_r+P_transfer[e][h]+P[h][cL]+P[e][cR]
+                                b4=c.log_child_frequencies[(cL,cR)]+t_r+P_transfer[e][h]+P[h][cR]+P[e][cL]
                                 b_l.append(b3)
                                 b_l.append(b4)
                         else:
-                            b3=np.log(clade_frequencies[c][(cL,cR)])+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cL],correction_ancestrale[e][cL])+P[e][cR]
-                            b4=np.log(clade_frequencies[c][(cL,cR)])+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cR],correction_ancestrale[e][cR])+P[e][cL]
-                            b_l.append(b3)
-                            b_l.append(b4)
+                            if P_avg[cL]>correction_ancestrale[e][cL]:
+                                b3=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cL],correction_ancestrale[e][cL])+P[e][cR]
+                                b_l.append(b3)
+                            if P_avg[cR]>correction_ancestrale[e][cR]:
+                                b4=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cR],correction_ancestrale[e][cR])+P[e][cL]
+                                b_l.append(b4)
 
                         #b+=clade_frequencies[c][(cL,cR)]*t_r*sum([P_transfer[e][h]*P[h][cL] for h in P_transfer[e].keys()])*P[e][cR]
                         #b+=clade_frequencies[c][(cL,cR)]*t_r*sum([P_transfer[e][h]*P[h][cR] for h in P_transfer[e].keys()])*P[e][cL]
                         #duplication
 
-                        b6=d_r+P[e][cL]+P[e][cR]+np.log(clade_frequencies[c][(cL,cR)])
+                        b6=d_r+P[e][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]
                         b_l.append(b6)
                         #b+=d_r*P[e][cL]*P[e][cR]*clade_frequencies[c][(cL,cR)]
+
+                    #print(len(b_l),e.name,c.name)
                     b=log_add_list(b_l)
 
                     resultat=b-np.log(a)
@@ -192,7 +213,7 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                     #P_avg_TL[e]=log_add(P_avg_TL[e],resultat)
                     a_store[e]=a
                     b_store[e]=b
-        if c in c_match.keys():
+        if c.is_leaf():
             transfer_list_e=[]
             for e in upper_post_order:
                 if c in P_TL[e]:
@@ -200,7 +221,7 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
             P_avg_TL[c]=log_add_list([P_TL[e][c] for e in transfer_list_e])
         else:
             P_avg_TL[c]=log_add_list([P_TL[e][c] for e in upper_post_order])
-        if c in c_match.keys():
+        if c.is_leaf():
             list_to_traverse=transfer_list_e
         else:
             list_to_traverse=upper_post_order
@@ -215,9 +236,9 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
             e=upper_queue.pop()
 
             if not mult_gene_match:
-                bool_continue_mult_match=not (c in c_match.keys() and c_match[c]==e)
+                bool_continue_mult_match=not (c.is_leaf() and c.match==e)
             else:
-                bool_continue_mult_match=not (c in c_match.keys() and e in c_match[c])
+                bool_continue_mult_match=not (c.is_leaf() and e in c.match)
             if bool_continue_mult_match:
                 if e in b_store:
                     b_l=[b_store[e]]
@@ -229,8 +250,17 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                                 b1=t_r+P_transfer[e][h]+P_TL[h][c]+E[e]
                                 b_l.append(b1)
                     else:
-                        b1=t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg_TL[c],correction_ancestrale_TL[e][c])+E[e]
-                        b_l.append(b1)
+                        #if P_avg_TL[c]==correction_ancestrale_TL[e][c]:
+                        #    #print(P_avg_TL[c],correction_ancestrale_TL[e][c])
+                        #    #print(c.name,e.name,e.parent.name,len(c.clade_leaves),correction_ancestrale_TL[e.parent][c],P_TL[e.parent][c],P_TL[e][c],P_avg_TL[c],log_add_list([P_TL[e][c] for e in upper_post_order]))
+                        #    #for e in upper_post_order:
+                        #    #    print(e.name, P_TL[e][c])
+                        #    #print(log_add(P_TL[upper_post_order[0]][c],P_TL[upper_post_order[-1]][c]),P_TL[upper_post_order[0]][c],P_TL[upper_post_order[-1]][c])
+                        if P_avg_TL[c]>correction_ancestrale_TL[e][c]:
+                            if None in [t_r,np.log(len(upper_post_order)-correction_ancestrale_size[e]),log_minus(P_avg_TL[c],correction_ancestrale_TL[e][c]),E[e]]:
+                                print([t_r,np.log(len(upper_post_order)-correction_ancestrale_size[e]),P_avg_TL[c],correction_ancestrale_TL[e][c],E[e]])
+                            b1=t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg_TL[c],correction_ancestrale_TL[e][c])+E[e]
+                            b_l.append(b1)
 
 
                     if not e.isLeaf():
@@ -282,8 +312,5 @@ def compute_upper_gene_P(upper_post_order,E, Eavg_no_log, clades_data, rates, c_
                     correction_ancestrale[e][c]=log_add(P[e][c],correction_ancestrale[e.parent][c])
 
 
-    if more_output:
-        likelihood=log_add_list([P[k][0] for k in P.keys()])
-        return P, P_TL,likelihood, correction_ancestrale_size
-    else:
-        return P
+    likelihood=log_add_list([P[k][am_tree] for k in P.keys()])
+    return P, P_TL,likelihood, correction_ancestrale_size

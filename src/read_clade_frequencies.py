@@ -10,9 +10,8 @@ Created on Thu Jan 16 14:19:06 2020
 
 
 
-
-
 import arbre
+from rec_classes import Amalgamated_tree
 
 #il faut quelque chose de hashable dans un dictionnaire donc on
 #prend les tuples obtenu a partir les listes triés de feuilles communes
@@ -140,39 +139,6 @@ def union_clade(c1,c2,clade_elements, clade_keys):
     return c
 
 
-
-#on part des feuilles
-#il suffit de sort par la taille
-def construct_clade_post_order(clade_frequencies, clade_elements):
-    def order_clade(clade):
-        return(len(clade_elements[clade]))
-    l=[i for i in clade_elements.keys()]
-    l.sort(key=order_clade, reverse=True)
-    #ordre donné par la taille des clades est bien un ordre qui empeche les fils d'apparaitre avant leur parent
-    #cependant on ne supprime pas les elements qui ne descendent pas (et donc ne mene pas) à la racine
-    first_clade=0#on va chercher le plus grand des clades, en supposant qu'il y en a bien un qui contienne tout les autres
-    for u in clade_elements:
-        if len(clade_elements[u])>len(clade_elements[first_clade]):
-            first_clade=u
-    e=set()
-    to_see=[first_clade]
-    while len(to_see)>0:
-        c=to_see.pop()
-        e.add(c)
-        for (cL,cR) in clade_frequencies[c]:
-            if not cL in e:
-                to_see.append(cL)
-            if not cR in e:
-                to_see.append(cR)
-    #maintenant e contient tout les elements atteignable depuis la racine
-    new_l=[]
-    for c in l:
-        if c in e:
-            new_l.append(c)
-    return new_l
-
-
-
 #on fait attention a ce que les arbres ne sont pas enracinés
 def compute_clade_frequencies(l_tree):
     bipartition_number=dict()
@@ -184,8 +150,6 @@ def compute_clade_frequencies(l_tree):
     for tree in l_tree:
         kcmpt+=1
         partition_counter_one_tree(tree, clade_elements, clade_keys,bipartition_number, tripartition_number)
-        if kcmpt % 100 ==0:
-            print(kcmpt, "/", len(l_tree))
     clade_frequencies=dict()
     n_clade=len(clade_elements)
     for c in range(n_clade):
@@ -209,22 +173,25 @@ def compute_clade_frequencies(l_tree):
     s=sum([bipartition_number[u] for u in bipartition_number.keys()])
     for c1,c2 in bipartition_number:
         clade_frequencies[0][(min(c1,c2),max(c1,c2))]=bipartition_number[(min(c1,c2),max(c1,c2))]/s
-    clade_post_order=construct_clade_post_order(clade_frequencies, clade_elements)
-    return clade_post_order, clade_frequencies, clade_elements, clade_keys
+
+    amalgamated_tree=Amalgamated_tree()
+    amalgamated_tree.initialize(clade_elements,clade_frequencies)
+    return amalgamated_tree
 
 
 def compute_clade_frequencies_multiple_families(l_tree_by_family):
-    clades_data_list=[]
+    am_tree_list=[]
     for l_tree in l_tree_by_family:
-        clade_data=compute_clade_frequencies(l_tree)
+        amalgamated_tree=compute_clade_frequencies(l_tree)
         #les noms des arbres sont "nom"+str(id_counter), donc pour avoir le nom, on enlève le 0 du nom du premier arbre
-        clades_data_list.append(clade_data)
-    return clades_data_list
+        am_tree_list.append(amalgamated_tree)
+    return am_tree_list
 
 def from_rooted_tree_to_clades(tree):
     clade_elements=dict()
     clade_keys=dict()
     clade_frequencies=dict()
+    tree_to_clade=dict()
     clade_to_tree=dict()
     c=0
     for e in tree.post_order_traversal():
@@ -233,7 +200,8 @@ def from_rooted_tree_to_clades(tree):
         leaves = tuple(l_tmp)
         clade_elements[c]=leaves
         clade_keys[leaves]=c
-        clade_to_tree[e]=c
+        tree_to_clade[e]=c
+        clade_to_tree[c]=e
         if not e.isRoot():
             p=e.parent
             pl_tmp=[u.name for u in p.leaves()]
@@ -254,36 +222,18 @@ def from_rooted_tree_to_clades(tree):
         if e.isLeaf():
             clade_frequencies[c]=dict()
         c+=1
-    clade_post_order=construct_clade_post_order(clade_frequencies, clade_elements)
-    return (clade_post_order, clade_frequencies, clade_elements, clade_keys), clade_to_tree
+
+    amalgamated_tree=Amalgamated_tree()
+    amalgamated_tree.initialize(clade_elements,clade_frequencies,corresponding_clade_to_tree=clade_to_tree)
+
+    return amalgamated_tree
 
 #from rooted tree to clades data list, with no amalgamation or root uncertainty, for the intermediate level of 3 level reconciliation
 def compute_clade_frequencies_rooted_tree(l_tree_by_family):
-    clade_to_tree_list=[]
-    clades_data_list=[]
+    am_tree_list=[]
     for tree in l_tree_by_family:
-        clade_data, clade_to_tree=from_rooted_tree_to_clades(tree)
-        clades_data_list.append(clade_data)
-        clade_to_tree_list.append(clade_to_tree)
-    return clades_data_list, clade_to_tree_list
-
-
-
-def clade_to_name(clades_data_list, tree):
-    d=dict()
-    d1=tree.name_to_tree()
-    clade_post_order, clade_frequencies, clade_elements, clade_keys = clades_data_list
-    for c in clade_elements.keys():
-        l_leaves=clade_elements[c]
-        a_leaf=l_leaves[0]
-        d[c]=(d1[a_leaf].n_leaves_ancestor(len(l_leaves))).name
-    return d
-
-def clade_to_name_by_fam(clades_data_list_by_fam, tree_list):
-    d_list=[]
-    for i_clades in range(len(tree_list)):
-        d_list.append(clade_to_name(clades_data_list_by_fam[i_clades], tree_list[i_clades]))
-    return d_list
+        am_tree_list.append(from_rooted_tree_to_clades(tree))
+    return am_tree_list
 
 
 

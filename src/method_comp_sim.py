@@ -4,6 +4,7 @@ from read_output import read_output_file_list
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def read_transfer_files(input_file_list):
     l_t_list=[]
@@ -75,9 +76,10 @@ def test_transfer(l_t_list,real_l_t_list):
 
 
 heuristic_list=["2l","dec","MC"]
+heuristic_list=["2l","dec"]
+
 path_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/output/"
-sim_number="_high1"
-sim_number="1"
+path_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/output2/"
 
 n_gene=5
 
@@ -85,7 +87,10 @@ path_dir_sim="/home/hmenet/Documents/Stage_M2/These/script/simulation/test_27072
 
 
 list_info=[]
-for sim_type in ["highmed","highlow","low","med","high"]:
+#for sim_type in ["low","med","high"]:
+#["highmed","highlow","low","med","high"]
+#["med_00_coevol","med_02_coevol","med_05_coevol","med_08_coevol","med_10_coevol"]
+for sim_type in ["med_00_coevol","med_02_coevol","med_05_coevol","med_08_coevol","med_10_coevol"]:
     for i_sim in range(1,6):
         #sim_type="med"
         #sim_type="high"
@@ -99,14 +104,23 @@ for sim_type in ["highmed","highlow","low","med","high"]:
         for heuristic in heuristic_list:
             print(heuristic)
             l_event_aggregate,l_events_by_fam=read_output_file_list([path_dir+sim_type+"/freq_"+sim_number+heuristic+"_"+"gene"+str(i)+".pruned.tree.nwk" for i in range(1,n_gene+1)])
+
+            gene_likelihood=[]
+            for i in range(0,n_gene):
+                log_file=path_dir+sim_type+"/freq_"+sim_number+heuristic+"_"+str(i)+"_likelihood"
+                f=open(log_file,mode="r")
+                s=f.read()
+                log_l=float(s)
+                gene_likelihood.append(log_l)
+
             l_t_list=transfer_list_from_events(l_events_by_fam)
             precision, recall, n_list, real_n_list=test_transfer(l_t_list,real_l_t_list)
             print("precision",precision)
             print("recall",recall)
             for i_gene in range(len(precision)):
-                list_info.append([precision[i_gene],recall[i_gene],n_list[i_gene],real_n_list[i_gene],heuristic,sim_type,sim_number])
+                list_info.append([precision[i_gene],recall[i_gene],n_list[i_gene],real_n_list[i_gene],heuristic,sim_type,sim_number,gene_likelihood[i_gene-1],i_gene])
 
-list_columns=["precision","recall","inferred_n_transfer","sim_n_transfer","heuristic","sim_type","sim_number"]
+list_columns=["precision","recall","inferred_n_transfer","sim_n_transfer","heuristic","sim_type","sim_number","log_likelihood", "i_gene"]
 df=pd.DataFrame(list_info,columns=list_columns)
 
 
@@ -130,6 +144,9 @@ plt.show()
 df.boxplot(column="recall", by="heuristic")
 plt.show()
 
+#df.boxplot(column="log_likelihood", by="heuristic")
+#plt.show()
+
 
 print(df.groupby("sim_type").mean())
 
@@ -149,6 +166,104 @@ df.groupby("sim_type").boxplot(column="recall", by="heuristic")
 plt.title("recall")
 plt.show()
 
+#df.groupby("sim_type").boxplot(column="log_likelihood", by="heuristic")
+#plt.title("log likelihood")
+#plt.show()
+
+
+#plt.figure()
+#for name, group in dfh:
+#    plt.scatter(group["precision"],group["log_likelihood"],label=name)
+
+#df.groupby("heuristic").plot.scatter(x="precision",y="recall")
+
+#plt.legend()
+#plt.show()
+
+def test_pairwise(h1,h2,range=None):
+    l1=list(df[df.heuristic==h1].precision)
+    l2=list(df[df.heuristic==h2].precision)
+    l3=[i - j for (i,j) in zip(l1,l2)]
+    plt.figure()
+    plt.hist(l3,bins=20,range=range)
+    plt.title("Precision difference: " + h1 + " - " + h2)
+    plt.show()
+    print(len([i for i in l3 if i>0]))
+    print(len([i for i in l3 if i<0]))
+    print(len([i for i in l3 if i==0]))
+
+    l1=list(df[df.heuristic==h1].recall)
+    l2=list(df[df.heuristic==h2].recall)
+    l3=[i - j for (i,j) in zip(l1,l2)]
+    plt.figure()
+    plt.hist(l3,bins=20,range=range)
+    plt.title("Recall difference: " + h1 + " - " + h2)
+    plt.show()
+    print(len([i for i in l3 if i>0]))
+    print(len([i for i in l3 if i<0]))
+    print(len([i for i in l3 if i==0]))
+
+test_pairwise("2l","dec",range=(-1,0.3))
+test_pairwise("2l","MC",range=(-1,0.3))
+test_pairwise("dec","MC",range=None)
+
+def test_pairwise_likelihood(h1,h2,range=None):
+    l4=[]
+    name_list=[]
+    for name, group in df.groupby(by="sim_type"):
+        name_list.append(name)
+        l1=list(group[group.heuristic==h1].log_likelihood)
+        l2=list(group[group.heuristic==h2].log_likelihood)
+        l3=[i - j for (i,j) in zip(l1,l2)]
+        l4.append(sum(l3)/len(l3))
+        plt.figure()
+        plt.hist(l3,bins=10,range=range)
+        plt.title(name+"Log likelihood difference: " + h1 + " - " + h2)
+        plt.show()
+    plt.figure()
+    plt.scatter(name_list, l4)
+    plt.show()
+
+test_pairwise_likelihood("2l","dec")
+
+df.groupby("sim_type").boxplot(column="log_likelihood", by="heuristic")
+plt.title("log_likelihood")
+plt.show()
+
+h1="dec"
+h2="2l"
+l1=list(df[df.heuristic==h1].log_likelihood)
+l2=list(df[df.heuristic==h2].log_likelihood)
+l5=list(df[df.heuristic==h1].precision)
+l6=list(df[df.heuristic==h2].precision)
+l7=list(df[df.heuristic==h1].recall)
+l8=list(df[df.heuristic==h2].recall)
+l4=list(df[df.heuristic==h1].sim_type)
+l3=[(i - j,k,k5-k6,k7-k8) for (i,j,k,k5,k6,k7,k8) in zip(l1,l2,l4,l5,l6,l7,l8)]
+list_columns=["diff_likelihood","sim_type","diff_precision","diff_recall"]
+pairwise=pd.DataFrame(l3,columns=list_columns)
+plt.figure()
+ax=sns.boxplot(x="sim_type",y="diff_precision",data=pairwise)
+plt.show()
+plt.figure()
+ax=sns.boxplot(x="sim_type",y="diff_recall",data=pairwise)
+plt.show()
+plt.figure()
+ax=sns.boxplot(x="sim_type",y="diff_likelihood",data=pairwise)
+plt.show()
+
+
+plt.figure()
+ax=sns.boxplot(x="sim_type",y="log_likelihood",data=df)
+plt.show()
+
+h1="dec"
+h2="2l"
+for name, group in df.groupby(by="sim_number"):
+    print(group[group.heuristic==h1].log_likelihood)
+
+
+#df.to_csv("/home/hmenet/Documents/Stage_M2/These/write/papier/figures/simulation/simulation_with_log.csv")
 
 """
 plt.figure()
