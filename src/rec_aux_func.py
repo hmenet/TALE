@@ -12,10 +12,16 @@ def log_add(a,b):
 
 #a>b
 def log_minus(a,b):
+    if a==b :
+        print("yes",a,b)
+        raise ValueError('A very specific bad thing happened.')
     if a >= b:
         return a+np.log(1-np.exp(b-a))
 
 def log_add_list(l):
+    if len(l)==0:
+        print("yes")
+        raise ValueError('A very specific bad thing happened.')
     M=max(l)
     s=0
     for a in l:

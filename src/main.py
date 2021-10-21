@@ -25,7 +25,7 @@ from rates_inference import gene_rates_ml
 from arbre import save_tree
 from out_recphyloxml import save_recphyloxml_from_rec
 from read_input import read_input
-from event_frequency_output import output_frequency_for_all_family
+from event_frequency_output import output_frequency_for_all_family,save_likelihood
 
 from rec_classes import*
 
@@ -78,6 +78,10 @@ parser.add_argument("-itr", "--inter_transfer_rate", default=0.01, type=float, h
 parser.add_argument("-ilr", "--inter_loss_rate", default=0.01, type=float, help="initial inter loss rate.")
 parser.add_argument("-ilo", "--inter_less_output", action="store_true", help="for three level, output only event frequency by gene family and no summation files")
 parser.add_argument("-ia","--inter_amalgamation",action="store_true",help="for three level, the intermediate level can be input as a list of trees as a density for amalgamation")
+parser.add_argument("-ir","--incomplete_sorting_rate",default=0.0, type=float, help="add the possibility of I event, some kind of incomplete sorting useful in some setting, speciation but one of the child do not descend.")
+parser.add_argument("-iir","--inter_incomplete_sorting_rate",default=0.0, type=float, help="add the possibility of I event for the inter reconciliation, some kind of incomplete sorting useful in some setting, speciation but one of the child do not descend.")
+
+
 
 args=parser.parse_args()
 
@@ -112,7 +116,7 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
     rec_upper_problem.n_sample = args.inter_n_rec_sample
     rec_upper_problem.n_steps = args.inter_n_rates_estimation_steps
     rec_upper_problem.n_rec_sample_rates = args.inter_n_rec_sample_rates
-    rec_upper_problem.rates = Event_rates(tr=args.inter_transfer_rate,lr=args.inter_loss_rate,dr=args.inter_duplication_rate)
+    rec_upper_problem.rates = Event_rates(tr=args.inter_transfer_rate,lr=args.inter_loss_rate,dr=args.inter_duplication_rate,ir=args.inter_incomplete_sorting_rate)
     rec_upper_problem.ncpu = args.n_cpu_multiprocess
     #rec_upper_problem.multiprocess_fam=args.multiprocess_fam
     rec_upper_problem.n_output_scenario=args.inter_n_recphyloxml
@@ -123,6 +127,51 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
     rec_problem.heuristic=args.three_level_heuristic
     rec_problem.upper_rec=rec_upper_problem
 
+    """
+    d=0
+    d2=0
+    l=[]
+    print(len(inter_am_tree_list))
+    for am_tree in inter_am_tree_list:
+        for clade in am_tree.reverse_post_order:
+            d+=len(clade.child_frequencies)
+            for u in clade.child_frequencies:
+                l.append(clade.child_frequencies[u])
+            d2+=len(clade.child_frequencies)/len(am_tree.reverse_post_order)
+
+
+    import matplotlib.pyplot as plt
+    #plt.figure()
+    #plt.hist(l,range=(0,1))
+    #plt.show()
+    print("diametre amalgamation", d, d2,len(inter_am_tree_list[0].reverse_post_order))
+
+
+    #inter_am_tree_list[0].pruning()
+
+    d=0
+    d2=0
+    l=[]
+    print(len(inter_am_tree_list))
+    for am_tree in inter_am_tree_list:
+        for clade in am_tree.reverse_post_order:
+            d+=len(clade.child_frequencies)
+            for u in clade.child_frequencies:
+                l.append(clade.child_frequencies[u])
+            d2+=len(clade.child_frequencies)/len(am_tree.reverse_post_order)
+
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.hist(l,range=(0,1))
+    plt.show()
+    print("diametre amalgamation", d, d2,len(inter_am_tree_list[0].reverse_post_order),len(inter_am_tree_list[0].leaves))
+    #for u in inter_am_tree_list[0].leaves:
+    #    print(u.name)
+
+    seen=dict()
+    """
+    #for u in inter_am_tree_list[0].reverse_post_order:
+    #    print(u.clade_leaves)
 else:
     symbiont_list, am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file)
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
@@ -137,7 +186,7 @@ rec_problem.n_sample = args.n_rec_sample
 rec_problem.n_steps = args.n_rates_estimation_steps
 rec_problem.n_rec_sample_rates = args.n_rates_estimation_rec_sample
 rec_problem.best_rec = args.best_rec
-rec_problem.rates = Event_rates(tr=args.transfer_rate,lr=args.loss_rate,dr=args.duplication_rate)
+rec_problem.rates = Event_rates(tr=args.transfer_rate,lr=args.loss_rate,dr=args.duplication_rate,ir=args.incomplete_sorting_rate)
 rec_problem.ncpu = args.n_cpu_multiprocess
 rec_problem.multiprocess_fam=args.multiprocess_fam
 rec_problem.n_output_scenario=args.n_recphyloxml
@@ -178,7 +227,7 @@ def rec_and_output(rec):
 
     if rec.third_level:
         if rec.heuristic=="MC":
-            print("Heuristic: ", rec.heuristic, rec.mc_sample)
+            print("Heuristic: ", rec.heuristic, rec.mc_samples)
         else:
             print("Heuristic: ", rec.heuristic)
     else:
@@ -197,13 +246,14 @@ def rec_and_output(rec):
         n_upper_scenario=rec.upper_rec.n_output_scenario
     else:
         n_upper_scenario=1
-
+    likelihood_list=[]
     for i_upper_scenario in range(n_upper_scenario):
         if rec.third_level:
             rec_sol_to_use=rec_sol.upper_divided_sol[i_upper_scenario]
             out_file_name=out_file+str(i_upper_scenario)+"upper"+".recphyloxml"
             save_recphyloxml_from_rec(rec.upper_rec,rec_sol.upper_divided_sol[i_upper_scenario].upper_scenario, out_file_name,rec_sol)
             lower_scenario_list=rec_sol.upper_divided_sol[i_upper_scenario].scenario_list
+            likelihood_list.append(rec_sol.upper_divided_sol[i_upper_scenario].log_likelihood)
         else:
             lower_scenario_list=rec_sol.scenario_list
             rec_sol_to_use=rec_sol
@@ -215,6 +265,8 @@ def rec_and_output(rec):
                 out_file_name=out_file+str(i_upper_scenario)+"u_"+str(i_recphylo)+".recphyloxml"
             save_recphyloxml_from_rec(rec, lower_scenario, out_file_name,rec_sol_to_use)
             i_recphylo+=1
+    out_file_name=out_file+"lower_log_likelihood_list"
+    save_likelihood(likelihood_list,out_file_name)
 
 
     #frequency per gene output

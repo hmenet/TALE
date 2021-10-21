@@ -123,6 +123,8 @@ Usage:
 
 # todo :
 
++ input recphyloxml as upper reconciliation
++ add warning if reading non binary tree or unrooted
 + output additional recphylo
 + possibility for null transfer rate
 + what happen if rooted gene tree

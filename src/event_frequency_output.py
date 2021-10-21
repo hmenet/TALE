@@ -30,9 +30,9 @@ def output_event_frequency(l_event_aggregate, rec,output_file,likelihood):
         event_list=event_sorted_by_types[event_type]
         event_list.sort(key=lambda e: l_event_aggregate[e], reverse=True)
     if rec.third_level:
-        event_type_list=["T_inter","T_intra","TL_inter","TL_intra","D","SL","S"]
+        event_type_list=["T_inter","T_intra","TL_inter","TL_intra","D","SL","S","I"]
     else:
-        event_type_list=["T","TL","D","SL","S"]
+        event_type_list=["T","TL","D","SL","S","I"]
     for event_type in event_type_list:
         if event_type in event_sorted_by_types:
             if event_type in ["S", "D"] :
@@ -60,7 +60,7 @@ def output_event_frequency(l_event_aggregate, rec,output_file,likelihood):
 
 
                     s+="\n"
-            if event_type in ["T","T_inter","T_intra"]:
+            if event_type in ["T","T_inter","T_intra","I"]:
                 s+=event_type+"\tgiving species\treceiving species\tobserved frequency\tlower node\tlower staying\tlower leaving"
                 if rec.third_level:
                     s+="\tupper giving match\tupper receiving match"
@@ -90,6 +90,15 @@ def output_event_frequency(l_event_aggregate, rec,output_file,likelihood):
 def output_frequency_for_all_family(l_event_by_family, rec, likelihood_by_gene,output_file="event_frequency"):
     for i in range(len(l_event_by_family)):
         output_event_frequency(l_event_by_family[i],rec, output_file+rec.lower[i].tree_name,likelihood_by_gene[i])
+
+def save_likelihood(likelihood_list,out_file):
+    s=""
+    for likelihood in likelihood_list:
+        s+=str(likelihood)+"\n"
+    f=open(out_file, "w")
+    f.write(s)
+    f.close()
+
 
 
 

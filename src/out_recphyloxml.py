@@ -41,6 +41,9 @@ def rec_to_string(tree_node,transfer_back=False,transfer_back_specie=None):
     for e in le:
         e1=e.upper
         e0=e.name
+        if e0=="I":
+            e0="T"
+
         if e0 == "S":
             s+="<speciation speciesLocation=\"" + e1 +"\"/>"
         if e0 == "D":

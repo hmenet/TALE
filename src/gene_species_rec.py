@@ -76,6 +76,7 @@ def compute_upper_gene_P(rec_problem):
     l_r= rec_problem.rates.llr
     t_r= rec_problem.rates.ltr
     s_r= rec_problem.rates.lsr
+    i_r=rec_problem.rates.lir
     upper_post_order=rec_problem.upper.post_order
 
     P=dict()
@@ -139,7 +140,7 @@ def compute_upper_gene_P(rec_problem):
                         for cL,cR in c.log_child_frequencies:
 
                             b1=log_add(P[e.left][cL]+P[e.right][cR],P[e.left][cR]+P[e.right][cL])
-                            b1+=c.log_child_frequencies[(cL,cR)]
+                            b1+=c.log_child_frequencies[(cL,cR)]+s_r
 
 
                             #b+=(P[e.left][cL]*P[e.right][cR]+P[e.left][cR]*P[e.right][cL])*clade_frequencies[c][(cL,cR)]
@@ -165,6 +166,22 @@ def compute_upper_gene_P(rec_problem):
                         #b+=E[e.right]*P_TL[e.left][c]
                         #b*=s_r
 
+                    #incomplete sorting event
+                    if not i_r is None:
+                        if not e.isLeaf():
+                            for cL,cR in c.log_child_frequencies:
+
+                                b7=P[e.left][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]+i_r
+                                b8=P[e.left][cR]+P[e][cL]+c.log_child_frequencies[(cL,cR)]+i_r
+                                b9=P[e.right][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]+i_r
+                                b10=P[e.right][cR]+P[e][cL]+c.log_child_frequencies[(cL,cR)]+i_r
+
+                                b_l.append(b7)
+                                b_l.append(b8)
+                                b_l.append(b9)
+                                b_l.append(b10)
+
+
                     for cL,cR in c.log_child_frequencies:
                         if P_transfer:
                             for h in P_transfer[e].keys():
@@ -173,10 +190,12 @@ def compute_upper_gene_P(rec_problem):
                                 b_l.append(b3)
                                 b_l.append(b4)
                         else:
-                            b3=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cL],correction_ancestrale[e][cL])+P[e][cR]
-                            b4=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cR],correction_ancestrale[e][cR])+P[e][cL]
-                            b_l.append(b3)
-                            b_l.append(b4)
+                            if P_avg[cL]>correction_ancestrale[e][cL]:
+                                b3=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cL],correction_ancestrale[e][cL])+P[e][cR]
+                                b_l.append(b3)
+                            if P_avg[cR]>correction_ancestrale[e][cR]:
+                                b4=c.log_child_frequencies[(cL,cR)]+t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg[cR],correction_ancestrale[e][cR])+P[e][cL]
+                                b_l.append(b4)
 
                         #b+=clade_frequencies[c][(cL,cR)]*t_r*sum([P_transfer[e][h]*P[h][cL] for h in P_transfer[e].keys()])*P[e][cR]
                         #b+=clade_frequencies[c][(cL,cR)]*t_r*sum([P_transfer[e][h]*P[h][cR] for h in P_transfer[e].keys()])*P[e][cL]
@@ -185,6 +204,8 @@ def compute_upper_gene_P(rec_problem):
                         b6=d_r+P[e][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]
                         b_l.append(b6)
                         #b+=d_r*P[e][cL]*P[e][cR]*clade_frequencies[c][(cL,cR)]
+
+                    #print(len(b_l),e.name,c.name)
                     b=log_add_list(b_l)
 
                     resultat=b-np.log(a)
@@ -229,8 +250,17 @@ def compute_upper_gene_P(rec_problem):
                                 b1=t_r+P_transfer[e][h]+P_TL[h][c]+E[e]
                                 b_l.append(b1)
                     else:
-                        b1=t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg_TL[c],correction_ancestrale_TL[e][c])+E[e]
-                        b_l.append(b1)
+                        #if P_avg_TL[c]==correction_ancestrale_TL[e][c]:
+                        #    #print(P_avg_TL[c],correction_ancestrale_TL[e][c])
+                        #    #print(c.name,e.name,e.parent.name,len(c.clade_leaves),correction_ancestrale_TL[e.parent][c],P_TL[e.parent][c],P_TL[e][c],P_avg_TL[c],log_add_list([P_TL[e][c] for e in upper_post_order]))
+                        #    #for e in upper_post_order:
+                        #    #    print(e.name, P_TL[e][c])
+                        #    #print(log_add(P_TL[upper_post_order[0]][c],P_TL[upper_post_order[-1]][c]),P_TL[upper_post_order[0]][c],P_TL[upper_post_order[-1]][c])
+                        if P_avg_TL[c]>correction_ancestrale_TL[e][c]:
+                            if None in [t_r,np.log(len(upper_post_order)-correction_ancestrale_size[e]),log_minus(P_avg_TL[c],correction_ancestrale_TL[e][c]),E[e]]:
+                                print([t_r,np.log(len(upper_post_order)-correction_ancestrale_size[e]),P_avg_TL[c],correction_ancestrale_TL[e][c],E[e]])
+                            b1=t_r-np.log(len(upper_post_order)-correction_ancestrale_size[e])+log_minus(P_avg_TL[c],correction_ancestrale_TL[e][c])+E[e]
+                            b_l.append(b1)
 
 
                     if not e.isLeaf():

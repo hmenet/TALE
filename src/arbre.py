@@ -92,6 +92,10 @@ class Tree:
             if self.right2 is None:
                 return self.right.leaves() + self.left.leaves()
             else: 
+                #if not self.isRoot():
+                #    print("esatrea",self.root.tree_name,self.name)
+                #if self.isRoot():
+                #    print("iuetr")
                 return self.right.leaves() + self.left.leaves() + self.right2.leaves()
         
     def leaves_unrooted(self):

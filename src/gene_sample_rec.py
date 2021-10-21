@@ -41,7 +41,7 @@ def sample_gene_upper_rec(rec, best=False):
     l_r= rec.rates.llr
     t_r= rec.rates.ltr
     s_r= rec.rates.lsr
-
+    i_r=rec.rates.lir
 
     s=rec.lower_tree_computation.log_l
     P=rec.lower_tree_computation.P
@@ -98,6 +98,20 @@ def sample_gene_upper_rec(rec, best=False):
                         l_event.append(("S", e.left, cL, e.right, cR))
                         l_proba.append(c.log_child_frequencies[(cL,cR)]+s_r+P[e.left][cR]+P[e.right][cL])
                         l_event.append(("S", e.left, cR, e.right, cL))
+
+                        #incomplete sorting event
+                        if not i_r is None:
+                            l_proba.append(c.log_child_frequencies[(cL,cR)]+i_r+P[e.left][cL]+P[e][cR])
+                            l_event.append(("I", e.left, cL, e, cR))
+                            l_proba.append(c.log_child_frequencies[(cL,cR)]+i_r+P[e.left][cR]+P[e][cL])
+                            l_event.append(("I", e.left, cR, e, cL))
+                            l_proba.append(c.log_child_frequencies[(cL,cR)]+i_r+P[e.right][cL]+P[e][cR])
+                            l_event.append(("I", e.right, cL, e, cR))
+                            l_proba.append(c.log_child_frequencies[(cL,cR)]+i_r+P[e.right][cR]+P[e][cL])
+                            l_event.append(("I", e.right, cR, e, cL))
+
+
+
                     if c in P_to_use[e.right]:
                         l_proba.append(s_r+E[e.left]+P_to_use[e.right][c])
                         l_event.append(("SL", e.right, c, e.left,c))
@@ -170,7 +184,7 @@ def sample_gene_upper_rec(rec, best=False):
                     event.upper_left_or_keeper_or_receiver=f
                     event.upper_right_or_loser_or_donor=g
 
-                if event_name in ["S","T","D"]:
+                if event_name in ["S","T","D","I"]:
                     r[v].append(f)
                     r[w].append(g)
                     clade_to_look.append(v)

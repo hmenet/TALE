@@ -106,7 +106,9 @@ def reconciliation(rec):
             n_sample_MC=1
         if rec.heuristic=="MC":
             best=False
-            rec.upper_rec.n_sample=rec.n_mc_samples
+            rec.upper_rec.n_sample=rec.mc_samples
+            rec.upper_rec.n_output_scenario=rec.mc_samples
+            n_sample_MC=rec.mc_samples
         #rec.upper_rec.n_output_scenario=rec.n_sample
         upper_rec_sol= two_level_rec(rec.upper_rec)
         compute_upper_gene_E(rec.upper_rec)
@@ -180,6 +182,7 @@ def reconciliation(rec):
                 l_event[event]/=n_sample_MC
         log_likelihood=log_add_list(log_likelihood_list) - np.log(n_sample_MC)
         rec_sol_global.log_likelihood=log_likelihood
+        rec_sol_global.log_likelihood_by_upper=log_likelihood_list
 
         for i_gene in range(len(log_likelihood_by_gene_list)):
             log_likelihood_by_gene_list[i_gene]/=n_sample_MC

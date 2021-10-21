@@ -6,10 +6,11 @@ import numpy as np
 ############
 
 class Event_rates:
-    def __init__(self, tr=0.01,lr=0.01,dr=0.01):
+    def __init__(self, tr=0.01,lr=0.01,dr=0.01,ir=0):
         self.tr=tr #transfer rate
         self.dr=dr #duplication rate
         self.lr=lr #loss rate
+        self.ir=ir #incomplete sorting rate
         self.sr_compute() #speciation rate, ensuring sum of rates equal to 1
         self.log_rates()
 
@@ -18,16 +19,23 @@ class Event_rates:
         self.ldr=np.log(self.dr)
         self.llr=np.log(self.lr)
         self.lsr=np.log(self.sr)
+        if self.ir > 0:
+            self.lir=np.log(self.ir)
+        else:
+            self.lir=None
 
     def sr_compute(self):
-        self.sr=1-self.tr - self.dr - self.lr #speciation rate, ensuring sum of rates equal to 1
+        self.sr=1-self.tr - self.dr - self.lr -self.ir #speciation rate, ensuring sum of rates equal to 1
 
     def reinit(self):#recompute speciation rate and log rates, to use after modification of one of the rate
         self.sr_compute()
         self.log_rates()
 
     def pp(self):
-        return "S " + str(self.sr) + "\tD " + str(self.dr) + "\tT " + str(self.tr) + "\tL " + str(self.lr)
+        if self.ir==0:
+            return "S " + str(self.sr) + "\tD " + str(self.dr) + "\tT " + str(self.tr) + "\tL " + str(self.lr)
+        else:
+            return "S " + str(self.sr) + "\tD " + str(self.dr) + "\tT " + str(self.tr) + "\tL " + str(self.lr) +  "\tI " + str(self.ir)
 
 #############
 
@@ -188,11 +196,12 @@ class Amalgamated_tree:
 
     def aux_liste(self,l,d):
         for (cl,cr) in self.child_frequencies:
-            for c in [cl,cr]:
-                if not c in d:
-                    d[c]=0
-                    l.append(c)
-                    c.aux_liste(l,d)
+            if self.child_frequencies[(cl,cr)]>0:
+                for c in [cl,cr]:
+                    if not c in d:
+                        d[c]=0
+                        l.append(c)
+                        c.aux_liste(l,d)
 
     def liste(self):
         d=dict()
@@ -208,6 +217,18 @@ class Amalgamated_tree:
         #ordre donné par la taille des clades est bien un ordre qui empeche les fils d'apparaitre avant leur parent
         self.reverse_post_order=l
         return l
+
+    def pruning(self):
+        for c in self.reverse_post_order:
+            if not c.is_leaf():
+                m=max([c.child_frequencies[u] for u in c.child_frequencies])
+                print(m,[c.child_frequencies[u] for u in c.child_frequencies])
+                for u in c.child_frequencies:
+                    if m > 0.1+c.child_frequencies[u]:
+                        c.child_frequencies[u]=0
+        self.reverse_post_order_traversal()
+
+
 
     def leaves_traversal(self):
         if self.reverse_post_order is None:
@@ -306,6 +327,7 @@ class Rec_sol:
         self.log_likelihood_by_gene=None
         self.upper_scenario=None
         self.upper_log_likelihood=None
+        self.log_likelihood_by_upper=None
 
 
 
