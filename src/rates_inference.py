@@ -54,6 +54,8 @@ def gene_rates_ml(rec):
         rec_sol=reconciliation(rec)
         if rec.rates.ir ==0 :
             non_used_events=["I"]
+        else:
+            non_used_events=[]
         rates=count_events(rec_sol.event_list_by_fam,non_used_events=non_used_events)
         rec.rates.dr=rates["D"]
         rec.rates.tr=rates["T"]
