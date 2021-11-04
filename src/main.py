@@ -125,6 +125,7 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
     rec_problem.third_level=True
     rec_problem.heuristic=args.three_level_heuristic
+    rec_problem.mc_samples=args.three_level_MC_sample
     rec_problem.upper_rec=rec_upper_problem
 
     """
