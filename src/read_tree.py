@@ -74,13 +74,21 @@ def read_tree_string(s, return_end_point=False, starting_point=0):
 
 #return a tree
 def read_tree(file):
-    f=open(file, "r")
+    try:
+        f = open(file,"r")
+    except IOError:
+        print("Could not open ", file)
     s=f.read()
     return read_tree_string(s)
 
 #liste d'arbre pour amalgamation, tous dans le même fichier
 def read_mult_tree(file):
-    f=open(file, "r")
+
+    try:
+        f = open(file,"r")
+    except IOError:
+        print("Could not open ", file)
+
     s=f.read()
     list_tree=[]
     k=0

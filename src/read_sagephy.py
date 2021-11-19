@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import arbre
-from read_clade_frequencies import compute_clade_frequencies_multiple_families
+from read_sagephy_aux import compute_clade_frequencies_multiple_families
 
 
 ### read sagephy file  #####
@@ -406,6 +406,9 @@ def from_unpruned_to_pruned_with_info(host,host_nodes_info_list,symbiont_list, s
 
     for gene_l in gene_list:
         for gene in gene_l:
+            if len([u for u in gene.leaves() if u.time == 1]) < 5 :
+                raise ValueError("pas assez de feuilles")
+            print(len([u for u in gene.leaves() if u.time == 1]))
             gene.prune_tree()
     host.prune_tree()
     return symbiont_pruned_list, l_t_list
@@ -466,7 +469,6 @@ def sagephy_to_3_level_input(data_dir,host_file, symbiont_directory, gene_direct
     host, host_nodes_info=read_tree_sagephy(host_file,more_output=True)
 
     host_file=host_file[host_file.rfind("/")+1:]
-
     host.tree_name=host_file
 
     symbiont_list, symbiont_file_list, symbiont_nodes_info_list=construct_tree_list(symbiont_directory, amalgamation=False)
@@ -488,7 +490,17 @@ def sagephy_to_3_level_input(data_dir,host_file, symbiont_directory, gene_direct
     #et d'un autre plus loin, puisque on travaille ensuite sur une copie des arbres, et pour les avoir tous pruned
     print([len(symbiont.liste()) for symbiont in symbiont_list])
     pre_match(host_list,symbiont_list,gene_list,upper_leaf_matching_list, lower_leaf_matching_list)
-    symbiont_list, l_t_list=from_unpruned_to_pruned_with_info(host, [host_nodes_info], symbiont_list, symbiont_nodes_info_list, gene_list, gene_nodes_info_list, observed_proba=observed_proba)
+    while True:
+        try:
+            symbiont_list, l_t_list=from_unpruned_to_pruned_with_info(host, [host_nodes_info], symbiont_list, symbiont_nodes_info_list, gene_list, gene_nodes_info_list, observed_proba=observed_proba)
+            break
+        except ValueError:
+            for u in gene_list:
+                for v in u :
+                    print(len(v.leaves()))
+                    if len(v.leaves()) < 6 :
+                        raise ValueError("Pas assez de feuille")
+            print(data_dir)
     print([len(symbiont.liste()) for symbiont in symbiont_list])
 
     ### genes clade frequencies computation #####
@@ -521,6 +533,8 @@ def sagephy_to_3_level_input(data_dir,host_file, symbiont_directory, gene_direct
     return host_list, symbiont_list, clades_data_list, upper_leaf_matching_list, c_match_list, l_t_list
 
 
+"""
+
 sim_list_list=[]
 
 sim_list_list=[["sim_290621_med_"+j+"_coevol"+str(i)+"/" for i in range(1,11)] for j in ["02","05","08","10"]]
@@ -531,28 +545,79 @@ sim_list_list=[["sim_290621_med_"+j+"_coevol"+str(i)+"/" for i in range(1,11)] f
 #sim_list_list.append(["sim_290621_high"+str(i)+"/" for i in range(1,6)])
 #sim_list_list.append(["sim_290621_med"+str(i)+"/" for i in range(1,6)])
 #sim_list_list.append(["sim_290621_low"+str(i)+"/" for i in range(1,6)])
+sim_list_list=[]
+for i_rate in ["1.0"]:#["0.0","0.2","0.4","0.6","0.8","1.0"]:
+    sim_list_list.append(["med_coevol_"+i_rate+"_"+str(i)+"/" for i in range(1,50)])
 
 for sim_list in sim_list_list:
     for sim in sim_list:
-        data_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/"+sim
-        host_file="species.pruned.tree"
-        symbiont_dir="symbiont_tree/"
-        gene_dir="gene_tree/"
-        upper_match="upper_matching/"
-        lower_match="lower_matching/"
-        file_links=[host_file, symbiont_dir,gene_dir, upper_match, lower_match]
-        for i in range(len(file_links)):
-            file_links[i]=data_dir+file_links[i]
-        host_file, symbiont_dir,gene_dir, upper_match, lower_match=file_links
+        if not sim in ["med_coevol_0.2_1/","med_coevol_0.2_5/","med_coevol_0.2_44/","med_coevol_0.4_3/","med_coevol_0.4_46/","med_coevol_0.4_31/","med_coevol_0.4_48/","med_coevol_1.0_15/","med_coevol_0.6_7/","med_coevol_0.6_9/","med_coevol_1.0_23/"]:
+            output_path="/home/hmenet/Documents/Stage_M2/These/script/simulation_101121/three_level_input/coevol"
+            #print(output_path+"/" +sim[:-1])
+            if not path.exists(output_path+"/" +sim[:-1]):
+                nsim=""
+                if sim[-3]=="_":
+                    nsim=int(sim[-2])
+                else:
+                    nsim=int(sim[-3:-1])
+                #data_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/"+sim
+                data_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation_101121/sagephy_output/coevol/"+sim
+                host_file="species.pruned.tree"
+                symbiont_dir="symbiont_tree/"
+                gene_dir="gene_tree/"
+                upper_match="upper_matching/"
+                lower_match="lower_matching/"
+                file_links=[host_file, symbiont_dir,gene_dir, upper_match, lower_match]
+                for i in range(len(file_links)):
+                    file_links[i]=data_dir+file_links[i]
+                host_file, symbiont_dir,gene_dir, upper_match, lower_match=file_links
 
 
-        output_path="/home/hmenet/Documents/Stage_M2/These/script/simulation/test_270721_sagephy"
-        if not path.isdir(output_path):
-            makedirs(output_path)
+                #output_path="/home/hmenet/Documents/Stage_M2/These/script/simulation/test_270721_sagephy"
+                #if not path.isdir(output_path):
+                #    makedirs(output_path)
 
 
-        host_list, symbiont_list, clades_data_list, upper_leaf_matching, c_match_list,l_t_list= sagephy_to_3_level_input(data_dir,host_file,symbiont_dir, gene_dir, upper_match, lower_match,output_path+"/" +sim[:-1],observed_proba=0.2)#0.15#0.08)
+                try:
+                    host_list, symbiont_list, clades_data_list, upper_leaf_matching, c_match_list,l_t_list= sagephy_to_3_level_input(data_dir,host_file,symbiont_dir, gene_dir, upper_match, lower_match,output_path+"/" +sim[:-1],observed_proba=0.2)#0.15#0.08)
+                except ValueError:
+                    print(sim)
 
-        print("\n lecture données ",sim," terminée")
+                print("\n lecture données ",sim," terminée")
+
+"""
+
+sim_list_list=[]
+for i_rate in ["1.0"]:
+    sim_list_list.append(["rep_tr"+str(i)+"/" for i in range(1,2)])
+
+for sim_list in sim_list_list:
+    for sim in sim_list:
+        if not sim in []:
+            output_path="/home/hmenet/Documents/Stage_M2/These/script/sim_pap2/three_level_input"
+            #print(output_path+"/" +sim[:-1])
+            if not path.exists(output_path+"/" +sim[:-1]):
+                #data_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/"+sim
+                data_dir="/home/hmenet/Documents/Stage_M2/These/script/sim_pap2/"+sim
+                host_file="species.pruned.tree"
+                symbiont_dir="symbiont_tree/"
+                gene_dir="gene_tree/"
+                upper_match="upper_matching/"
+                lower_match="lower_matching/"
+                file_links=[host_file, symbiont_dir,gene_dir, upper_match, lower_match]
+                for i in range(len(file_links)):
+                    file_links[i]=data_dir+file_links[i]
+                host_file, symbiont_dir,gene_dir, upper_match, lower_match=file_links
 
 
+                #output_path="/home/hmenet/Documents/Stage_M2/These/script/simulation/test_270721_sagephy"
+                #if not path.isdir(output_path):
+                #    makedirs(output_path)
+
+
+                try:
+                    host_list, symbiont_list, clades_data_list, upper_leaf_matching, c_match_list,l_t_list= sagephy_to_3_level_input(data_dir,host_file,symbiont_dir, gene_dir, upper_match, lower_match,output_path+"/" +sim[:-1],observed_proba=0.2)#0.15#0.08)
+                except ValueError:
+                    print(sim)
+
+                print("\n lecture données ",sim," terminée")

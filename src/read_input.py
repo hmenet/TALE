@@ -6,6 +6,7 @@ from read_tree import read_tree, read_mult_tree
 from read_clade_frequencies import compute_clade_frequencies_multiple_families, compute_clade_frequencies_rooted_tree
 from rec_classes import Tree_list
 
+import sys
 
 ### read the input datas  #####
 
@@ -21,6 +22,8 @@ def construct_file_list(directory):
 def construct_tree_list(directory, amalgamation=False):
     tree_list=[]
     tree_file_list=construct_file_list(directory)
+    if len(tree_file_list)==0:
+        sys.exit("could not find any tree in "+directory )
     for tree_file in tree_file_list:
         if amalgamation:
             #tree_list2=[read_tree(directory+tree_file)]
