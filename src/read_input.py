@@ -232,6 +232,11 @@ def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None,
 
     symbiont_list, am_tree_list=read_input_2levels(symbiont_directory, gene_directory=gene_directory, leaf_matching_directory=leaf_matching_directory, leaf_matching_file=leaf_matching_file, inter=False)
 
+    if not inter_amalgamation:
+        for symbiont in symbiont_list:
+            if not symbiont.isRooted():
+                sys.exit("For two level, upper tree must be rooted. To use unrooted symbiont tree in three level, use -ia option.")
+
     id_used=0 #we give a unique id as a name to all non leaves nodes in all trees
 
 
@@ -251,6 +256,12 @@ def read_input(symbiont_directory, gene_directory, leaf_matching_directory=None,
             host_list, inter_am_tree_list=read_input_2levels(host_directory, gene_directory=symbiont_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=False,inter_file_list=symbiont_file_list,inter_amalgamation=True)
         else:
             host_list, inter_am_tree_list=read_input_2levels(host_directory, inter_list=symbiont_list, leaf_matching_directory=host_matching_dir, leaf_matching_file=host_matching_file, inter=True, inter_file_list=symbiont_file_list)
+
+        #test rooted
+
+        for host in host_list:
+            if not host.isRooted():
+                sys.exit("Host tree must be rooted")
 
         id_used=rename_tree_list(host_list,id_used,"h")
         id_used=rename_tree_list(symbiont_list,id_used,"st")

@@ -36,9 +36,9 @@ def output_event_frequency(l_event_aggregate, rec,output_file,likelihood):
     for event_type in event_type_list:
         if event_type in event_sorted_by_types:
             if event_type in ["S", "D"] :
-                s+=event_type+"\tparent species\tobserved frequency\tlower node"
+                s+=event_type+"\tparent_species\tobserved_frequency\tlower_node"
                 if rec.third_level:
-                    s+="\tupper match"
+                    s+="\tupper_match"
                 s+="\n"
                 for event in event_sorted_by_types[event_type]:
                     s+=event_type+"\t"+event.upper+"\t"+str(l_event_aggregate[event])+"\t"+event.lower
@@ -47,9 +47,9 @@ def output_event_frequency(l_event_aggregate, rec,output_file,likelihood):
 
                     s+="\n"
             if event_type=="SL":
-                s+="SL\tparent species\tchild species keeping the gene\tchild species losing the gene\tobserved frequency\t lower node"
+                s+="SL\tparent_species\tchild_species_keeping_the_gene\tchild_species_losing_the_gene\tobserved_frequency\tlower_node"
                 if rec.third_level:
-                    s+="\tupper match\tupper left match\tupper right match"
+                    s+="\tupper_match\tupper_left_match\tupper_right_match"
                 s+="\n"
                 for event in event_sorted_by_types["SL"]:
                     s+="SL\t"+event.upper+"\t"+event.upper_left_or_keeper_or_receiver+"\t"+event.upper_right_or_loser_or_donor+"\t"+str(l_event_aggregate[event])+"\t"+event.lower
@@ -61,9 +61,9 @@ def output_event_frequency(l_event_aggregate, rec,output_file,likelihood):
 
                     s+="\n"
             if event_type in ["T","T_inter","T_intra","I"]:
-                s+=event_type+"\tgiving species\treceiving species\tobserved frequency\tlower node\tlower staying\tlower leaving"
+                s+=event_type+"\tgiving_species\treceiving_species\tobserved_frequency\tlower_node\tlower_staying\tlower_leaving"
                 if rec.third_level:
-                    s+="\tupper giving match\tupper receiving match"
+                    s+="\tupper_giving_match\tupper_receiving_match"
                 s+="\n"
                 for event in event_sorted_by_types[event_type]:
                     s+=event_type+"\t"+event.upper+"\t"+event.upper_left_or_keeper_or_receiver+"\t"+str(l_event_aggregate[event])+"\t"+event.lower+"\t"+event.lower_right+"\t"+event.lower_left
@@ -72,9 +72,9 @@ def output_event_frequency(l_event_aggregate, rec,output_file,likelihood):
                         s+=upper_match_print(event.upper_left_match)
                     s+="\n"
             if event_type in ["TL","TL_inter","TL_intra"]:
-                s+=event_type+"\tgiving species\treceiving species\tobserved frequency\tlower node"
+                s+=event_type+"\tgiving_species\treceiving_species\tobserved_frequency\tlower_node"
                 if rec.third_level:
-                    s+="\tupper giving match\tupper receiving match"
+                    s+="\tupper_giving_match\tupper_receiving_match"
                 s+="\n"
                 for event in event_sorted_by_types[event_type]:
                     s+=event_type+"\t"+event.upper+"\t"+event.upper_left_or_keeper_or_receiver+"\t"+str(l_event_aggregate[event])+"\t"+event.lower
@@ -99,6 +99,10 @@ def save_likelihood(likelihood_list,out_file):
     f.write(s)
     f.close()
 
-
+def save_end_likelihood(likelihood,out_file):
+    s=str(likelihood)
+    f=open(out_file, "w")
+    f.write(s)
+    f.close()
 
 

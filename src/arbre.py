@@ -64,6 +64,9 @@ class Tree:
         #return self.root == self
         return self.parent == None
 
+    def isRooted(self):
+        return self.right2 is None
+
     #return true if self is a strict ascendant of tree
     def isAscendant(self, tree):
         if tree.isRoot():

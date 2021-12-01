@@ -127,14 +127,12 @@ Usage:
 + add warning if reading non binary tree or unrooted
 + output additional recphylo
 + possibility for null transfer rate
-+ what happen if rooted gene tree
 + output file names
 + save amalgamation
 + more verbose
 + commenting and renaming pass (for upper/intermediate/lower vocab) 
 + 3 level: P transfer in E computation
 + option for matching leaves name (search for the species leaf name in the beggining of the gene leaves)
-+ 3 level : possibility for the intermediate tree to try different roots
 + 3 level : possibility to store upper rec to not reconcile it twice if same
 
 # Some included examples :
@@ -159,4 +157,4 @@ Usage:
 		
 + ex_erwinia 3-Level : example with a matching directory for leaves, and matching file for upper level and free living symbionts, from Manzano Marin et al. https://doi.org/10.1038/s41396-019-0533-6
 		
-		python3 src/main.py example_data/ex_erwinia/symbiont/ example_data/ex_erwinia/genes/ -mdir example_data/ex_erwinia/lower_matching/ -tl example_data/ex_erwinia/host/ -imf example_data/ex_erwinia/matching_symbiont_host -tlh dec -mpf
+		python3 src/main.py example_data/ex_erwinia/symbiont/ example_data/ex_erwinia/genes/ -mdir example_data/ex_erwinia/lower_matching/ -tl example_data/ex_erwinia/host/ -imf example_data/ex_erwinia/matching_symbiont_host -tlh dec -mpf -ncpu 4

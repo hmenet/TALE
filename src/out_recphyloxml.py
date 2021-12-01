@@ -149,4 +149,7 @@ def output_recphyloxml_additional_info(rec,rec_sol, file,rec_scenario_by_fam):
 def save_recphyloxml_from_rec(rec,rec_scenario_by_fam,file, rec_sol):
     save_recphyloxml(rec, rec_scenario_by_fam,file)
     output_recphyloxml_additional_info(rec,rec_sol,file+".additional_info",rec_scenario_by_fam)
-
+    for host_tree in rec.upper.tree_list:
+        arbre.save_tree(host_tree,file+"upper_tree.nwk")
+    for rec_scenario in rec_scenario_by_fam:
+        arbre.save_tree(rec_scenario.reconstructed_lower, file+"lower_tree.nwk")

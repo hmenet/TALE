@@ -25,7 +25,7 @@ from rates_inference import gene_rates_ml
 from arbre import save_tree
 from out_recphyloxml import save_recphyloxml_from_rec
 from read_input import read_input
-from event_frequency_output import output_frequency_for_all_family,save_likelihood
+from event_frequency_output import output_frequency_for_all_family,save_likelihood, save_end_likelihood
 
 from rec_classes import*
 
@@ -243,6 +243,10 @@ def rec_and_output(rec):
     #recphyloxml output
     out_file=rec.output_path
 
+    if not path.isdir(out_file):
+        makedirs(out_file)
+
+
     if rec.third_level:
         n_upper_scenario=rec.upper_rec.n_output_scenario
     else:
@@ -268,6 +272,7 @@ def rec_and_output(rec):
             i_recphylo+=1
     out_file_name=out_file+"lower_log_likelihood_list"
     save_likelihood(likelihood_list,out_file_name)
+    save_end_likelihood(rec_sol.log_likelihood, out_file+"lower_log_likelihood")
 
 
     #frequency per gene output

@@ -454,6 +454,23 @@ def save_matching(tree, output_file):
     f.write(s)
     f.close()
 
+def save_matching_speciesrax(tree, output_file):
+    d=dict()
+    for u in tree.leaves():
+        d.setdefault(u.match.name,[])
+        d[u.match.name].append(u.name)
+    #print(d)
+    s=""
+    for s_leaf in d:
+        s+=s_leaf+":"
+        for u in d[s_leaf]:
+            s+=u+";"
+        s=s[:-1]+"\n"
+    f=open(output_file, "w")
+    f.write(s)
+    f.close()
+
+
 def save_matchings(tree_list,tree_file_list,output_path):
     if not path.isdir(output_path):
         makedirs(output_path)
@@ -461,8 +478,29 @@ def save_matchings(tree_list,tree_file_list,output_path):
         save_matching(tree_list[i_tree],output_path+tree_file_list[i_tree]+".leafmap")
 
 
+def save_matchings_speciesrax(tree_list,tree_file_list,output_path):
+    if not path.isdir(output_path):
+        makedirs(output_path)
+    for i_tree in range(len(tree_list)):
+        save_matching_speciesrax(tree_list[i_tree],output_path+tree_file_list[i_tree]+".link")
+
+
+
+def save_family_speciesrax(gene_file_list, matching_file_list, fam_name_list, output_path):
+    if not path.isdir(output_path):
+        makedirs(output_path)
+    s="[FAMILIES]\n"
+    for gene_file, matching_file, fam_name in zip(gene_file_list,matching_file_list,fam_name_list):
+        s+=" - "+fam_name + "\n"
+        s+="starting_gene_tree = "+gene_file+"\n"
+        s+="mapping = "+matching_file+"\n"
+    f=open(output_path+"families_speciesrax.txt", "w")
+    f.write(s)
+    f.close()
+
+
 #sagephy selon si on veut l'info des simulations
-def sagephy_to_3_level_input(data_dir,host_file, symbiont_directory, gene_directory, upper_leaf_matching_directory, lower_leaf_matching_directory, output_path, observed_proba=1):
+def sagephy_to_3_level_input(data_dir,host_file, symbiont_directory, gene_directory, upper_leaf_matching_directory, lower_leaf_matching_directory, output_path, observed_proba=1, speciesrax=False):
 
 
 
@@ -529,6 +567,11 @@ def sagephy_to_3_level_input(data_dir,host_file, symbiont_directory, gene_direct
 
     save_trees(new_gene_list,gene_file_list,output_path+"/genes/")
 
+    #input format for speciesrax
+    if speciesrax:
+        save_matchings_speciesrax(new_gene_list,gene_file_list,output_path+"/speciesrax_matching/")
+
+        save_family_speciesrax(["/genes/"+gene+".nwk" for gene in gene_file_list], ["/speciesrax_matching/"+gene+".link" for gene in gene_file_list], gene_file_list, output_path+"/speciesrax_families/")
 
     return host_list, symbiont_list, clades_data_list, upper_leaf_matching_list, c_match_list, l_t_list
 
@@ -589,14 +632,14 @@ for sim_list in sim_list_list:
 
 sim_list_list=[]
 for i_rate in ["1.0"]:
-    sim_list_list.append(["rep_tr"+str(i)+"/" for i in range(1,2)])
+    sim_list_list.append(["rep_tr"+str(i)+"/" for i in range(1,4)])
 
 for sim_list in sim_list_list:
     for sim in sim_list:
         if not sim in []:
             output_path="/home/hmenet/Documents/Stage_M2/These/script/sim_pap2/three_level_input"
             #print(output_path+"/" +sim[:-1])
-            if not path.exists(output_path+"/" +sim[:-1]):
+            if True : #not path.exists(output_path+"/" +sim[:-1]):
                 #data_dir="/home/hmenet/Documents/Stage_M2/These/script/simulation/"+sim
                 data_dir="/home/hmenet/Documents/Stage_M2/These/script/sim_pap2/"+sim
                 host_file="species.pruned.tree"
@@ -616,8 +659,18 @@ for sim_list in sim_list_list:
 
 
                 try:
-                    host_list, symbiont_list, clades_data_list, upper_leaf_matching, c_match_list,l_t_list= sagephy_to_3_level_input(data_dir,host_file,symbiont_dir, gene_dir, upper_match, lower_match,output_path+"/" +sim[:-1],observed_proba=0.2)#0.15#0.08)
+                    host_list, symbiont_list, clades_data_list, upper_leaf_matching, c_match_list,l_t_list= sagephy_to_3_level_input(data_dir,host_file,symbiont_dir, gene_dir, upper_match, lower_match,output_path+"/" +sim[:-1],observed_proba=0.2, speciesrax=True)#0.15#0.08)
+
+                    for symbiont in symbiont_list:
+                        print("symbionte",len(symbiont.leaves()))
+                    for gene in c_match_list:
+                        print("gene", len(gene))
+
+
+
                 except ValueError:
                     print(sim)
+
+
 
                 print("\n lecture données ",sim," terminée")
