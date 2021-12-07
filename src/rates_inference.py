@@ -14,7 +14,8 @@ from reconciliation import reconciliation
 
 ####### to do ######
 
-def count_events(l_event, min_rate=0.0001,non_used_events=[]):
+def count_events(l_event, min_rate=0.0001,non_used_events=[],geo=False):
+    #geo=True
     d=dict()
     d["S"]=0
     d["L"]=0
@@ -28,6 +29,15 @@ def count_events(l_event, min_rate=0.0001,non_used_events=[]):
                 for c in u.name:
                     d[c]+=l_e[u]
                     total+=l_e[u]
+
+    if geo:
+        non_disp_ext_events=["S","D","I"]
+        d_tmp=dict()
+        for event in non_disp_ext_events:
+            total+=sum([d[e] for e in non_disp_ext_events])-d[event]
+            d_tmp[event]=sum([d[e] for e in non_disp_ext_events])
+        for event in non_disp_ext_events:
+            d[event]=d_tmp[event]
     added=0
     for c in d.keys():
         d[c]=d[c]/total
@@ -38,6 +48,7 @@ def count_events(l_event, min_rate=0.0001,non_used_events=[]):
     for c in d.keys():
         if d[c]>2*min_rate:
             d[c]-=to_retrieve
+
     return d
 
 #####
@@ -56,7 +67,7 @@ def gene_rates_ml(rec):
             non_used_events=["I"]
         else:
             non_used_events=[]
-        rates=count_events(rec_sol.event_list_by_fam,non_used_events=non_used_events)
+        rates=count_events(rec_sol.event_list_by_fam,non_used_events=non_used_events,geo=rec.geo)
         rec.rates.dr=rates["D"]
         rec.rates.tr=rates["T"]
         rec.rates.lr=rates["L"]

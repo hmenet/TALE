@@ -78,8 +78,10 @@ parser.add_argument("-itr", "--inter_transfer_rate", default=0.01, type=float, h
 parser.add_argument("-ilr", "--inter_loss_rate", default=0.01, type=float, help="initial inter loss rate.")
 parser.add_argument("-ilo", "--inter_less_output", action="store_true", help="for three level, output only event frequency by gene family and no summation files")
 parser.add_argument("-ia","--inter_amalgamation",action="store_true",help="for three level, the intermediate level can be input as a list of trees as a density for amalgamation")
+parser.add_argument("-dd","--distance_dependent",action="store_true",help="add dependence on distance in the tree for transfers")
 parser.add_argument("-ir","--incomplete_sorting_rate",default=0.0, type=float, help="add the possibility of I event, some kind of incomplete sorting useful in some setting, speciation but one of the child do not descend.")
 parser.add_argument("-iir","--inter_incomplete_sorting_rate",default=0.0, type=float, help="add the possibility of I event for the inter reconciliation, some kind of incomplete sorting useful in some setting, speciation but one of the child do not descend.")
+parser.add_argument("-geo","--geo_rates",action="store_true",help="geographic null events (S, D, I) get all the same rates at each inference step")
 
 
 
@@ -120,11 +122,15 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
     rec_upper_problem.ncpu = args.n_cpu_multiprocess
     #rec_upper_problem.multiprocess_fam=args.multiprocess_fam
     rec_upper_problem.n_output_scenario=args.inter_n_recphyloxml
-
+    rec_upper_problem.dd=args.distance_dependent
+    rec_upper_problem.geo=args.geo_rates
 
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
     rec_problem.third_level=True
     rec_problem.heuristic=args.three_level_heuristic
+    if args.distance_dependent:
+        rec_problem.heuristic="dd_"+args.three_level_heuristic
+
     rec_problem.mc_samples=args.three_level_MC_sample
     rec_problem.upper_rec=rec_upper_problem
 
@@ -176,6 +182,8 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
 else:
     symbiont_list, am_tree_list=read_input(args.upper_dir, args.lower_dir, leaf_matching_directory=args.matching_dir, leaf_matching_file=args.matching_file)
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
+    rec_problem.dd=args.distance_dependent
+    rec_problem.geo=args.geo_rates
 
 
 

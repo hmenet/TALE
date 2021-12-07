@@ -108,6 +108,7 @@ class Rec_problem:
         self.upper_tree_computation=Rec_upper_tree_computation()
         self.lower_tree_computation=Rec_lower_tree_computation()
         self.rate_inference=False #True when infering rates
+        self.dd=False#distance dependent transfers
 
         ### for three level rec
         self.third_level=False

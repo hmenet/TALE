@@ -3,7 +3,7 @@ import multiprocessing as mp
 
 from gene_species_rec import compute_upper_gene_E, compute_upper_gene_P
 from gene_sample_rec import sample_gene_upper_rec
-from transfer_prob_pre_process import prob_transfer_sequential
+from transfer_prob_pre_process import prob_transfer_sequential, distance_dependent
 from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match
 
 from rec_classes import Tree_list, Rec_sol
@@ -100,7 +100,7 @@ def two_level_rec(rec):
 #rec is a rec_problem instance, and rate inference is True if called during rate inference
 def reconciliation(rec):
     if rec.third_level:
-        if rec.heuristic in ["dec","dec_no_ghost"]:
+        if rec.heuristic in ["dec","dec_no_ghost","dd_dec"]:
             rec.upper_rec.best=True
             rec.upper_rec.n_sample=1
             n_sample_MC=1
@@ -190,4 +190,7 @@ def reconciliation(rec):
 
         return rec_sol_global
     else:
+        if rec.dd:
+            P_transfer=distance_dependent(rec)
+            rec.upper_tree_computation.P_transfer=P_transfer
         return two_level_rec(rec)
