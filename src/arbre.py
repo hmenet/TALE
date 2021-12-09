@@ -520,16 +520,20 @@ def distance_ascendant(node1, node2):
 
 #on peut surement faire mieux comme complexité
 def distance(node1, node2):
-    #because isAscendant is strict
-    if node1==node2:
-        return 0
-    if node1.isAscendant(node2):
-        return distance_ascendant(node1, node2)
+    if node1.root==node2.root:
+        #because isAscendant is strict
+        if node1==node2:
+            return 0
+        if node1.isAscendant(node2):
+            return distance_ascendant(node1, node2)
+        else:
+            if node2.isAscendant(node1):
+                return distance_ascendant(node2, node1)
+            else: #none of the nodes can be the root as one would be ascendant to the other in this case
+                return 1 + distance(node1, node2.parent)
     else:
-        if node2.isAscendant(node1):
-            return distance_ascendant(node2, node1)
-        else: #none of the nodes can be the root as one would be ascendant to the other in this case
-            return 1 + distance(node1, node2.parent)
+        #we do as if the two trees were joined at their roots
+        return distance(node1,node1.root)+distance(node2,node2.root)+2
     
 #meme construc_real_match que dans parasite fixe mais adapte a un arbre avec match en entree, pour l'affichage apres prune
 def tree_construct_real_match(tree):

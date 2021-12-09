@@ -110,6 +110,8 @@ class Rec_problem:
         self.rate_inference=False #True when infering rates
         self.dd=False#distance dependent transfers
 
+        self.geo=False
+
         ### for three level rec
         self.third_level=False
         self.upper_rec=None
