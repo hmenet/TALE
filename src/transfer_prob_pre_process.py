@@ -62,14 +62,16 @@ def prob_transfer_alea(rec):
 # at the end we want tree format
 #inter list is the reconstructed from amalgamated trees inter trees
 #rec is the upper rec problem
-def prob_transfer_sequential(rec, inter_list):
-    host_post_order=rec.upper.post_order
+def prob_transfer_sequential(rec):
 
-    E=rec.upper_tree_computation.E_no_log
-    d_r= rec.rates.dr
-    l_r= rec.rates.lr
-    t_r= rec.rates.tr
-    s_r=rec.rates.sr
+    inter_list=rec.upper
+    host_post_order=rec.upper_rec.upper.post_order
+
+    E=rec.upper_rec.upper_tree_computation.E_no_log
+    d_r= rec.upper_rec.rates.dr
+    l_r= rec.upper_rec.rates.lr
+    t_r= rec.upper_rec.rates.tr
+    s_r=rec.upper_rec.rates.sr
     #on calcule d'abord la proba de transfert entre de gène de parasite sachant l'hôte de chacun des parasites
     P_transfer_h=dict()
     #P_transfer_h[h1][h2] : proba de transfert de gène entre un parasite placé dans l'hôte h1 et un dans l'hôte h2
@@ -97,10 +99,10 @@ def prob_transfer_sequential(rec, inter_list):
             P_transfer_h[h][h]=1/N_parasites[h]
     else:
         if rec.heuristic=="dd_dec":
-            P_transfer_upper=distance_dependent(rec.upper, upper_dependent=False)
+            P_transfer_upper=distance_dependent(rec.upper_rec)
             for h in P_transfer_h:
-                for h2 in host_post_order:
-                    if h != h2:
+                for h2 in P_transfer_upper[h]:
+                    if h2 in N_parasites:
                         P_transfer_h[h][h2]=np.exp(P_transfer_upper[h][h2])/N_parasites[h2]
             for h in match_hp_inv.keys():
                 P_transfer_h[h][h]=1/N_parasites[h]
@@ -152,7 +154,15 @@ def prob_transfer_sequential(rec, inter_list):
         norm_factor=0
         for p2 in inter_list.post_order:
             if (not p1 == p2) and (not p2.isAscendant(p1)):
-                p_transfertmp=sum([sum([P_transfer_h[h1][h2] for h1 in p1.match])for h2 in p2.match])
+                if rec.heuristic=="dd_dec":
+                    p_transfertmp=0
+                    for h1 in p1.match:
+                        for h2 in p2.match:
+                            if h2 in P_transfer_h[h1]:
+                                p_transfertmp+=P_transfer_h[h1][h2]
+                else:
+                    p_transfertmp=sum([sum([P_transfer_h[h1][h2] for h1 in p1.match])for h2 in p2.match])
+
                 if p_transfertmp != 0:
                     P_transfer[p1][p2]=p_transfertmp
                     norm_factor+=p_transfertmp

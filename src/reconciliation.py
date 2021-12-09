@@ -134,10 +134,12 @@ def reconciliation(rec):
                 reconstructed_inter=scenario.reconstructed_lower
                 reconstructed_inter_list.append(reconstructed_inter)
             reconstructed_inter_list=Tree_list(reconstructed_inter_list)
-
-            P_transfer=prob_transfer_sequential(rec.upper_rec, reconstructed_inter_list)
-            rec.upper_tree_computation.P_transfer=P_transfer
             rec.upper=reconstructed_inter_list
+
+
+
+            P_transfer=prob_transfer_sequential(rec)
+            rec.upper_tree_computation.P_transfer=P_transfer
             #we match lower to reconstructed
 
             tree_from_name=reconstructed_inter_list.name_to_tree()
