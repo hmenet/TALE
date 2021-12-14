@@ -111,13 +111,13 @@ class Rec_problem:
         self.dd=False#distance dependent transfers
 
         self.geo=False
+        self.slm="l"
 
         ### for three level rec
         self.third_level=False
         self.upper_rec=None
         self.heuristic=None
         self.mc_samples=10
-
 
 
 

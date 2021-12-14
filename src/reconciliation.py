@@ -34,11 +34,17 @@ def aggregate_scenarios(scenario_list):
 def family_job(rec):
 
     ### P computation
+    slm_tmp=rec.slm
+
+    if rec.rate_inference:
+        rec.slm="l"
     P,P_TL, log_l,corr_size=compute_upper_gene_P(rec)
+    rec.slm = slm_tmp
     rec.lower_tree_computation.P=P
     rec.lower_tree_computation.P_TL=P_TL
     rec.lower_tree_computation.log_l=log_l
     rec.lower_tree_computation.corr_size=corr_size
+
 
     ### Sampling
     if rec.rate_inference:

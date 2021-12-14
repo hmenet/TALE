@@ -82,6 +82,7 @@ parser.add_argument("-dd","--distance_dependent",action="store_true",help="add d
 parser.add_argument("-ir","--incomplete_sorting_rate",default=0.0, type=float, help="add the possibility of I event, some kind of incomplete sorting useful in some setting, speciation but one of the child do not descend.")
 parser.add_argument("-iir","--inter_incomplete_sorting_rate",default=0.0, type=float, help="add the possibility of I event for the inter reconciliation, some kind of incomplete sorting useful in some setting, speciation but one of the child do not descend.")
 parser.add_argument("-geo","--geo_rates",action="store_true",help="geographic null events (S, D, I) get all the same rates at each inference step")
+parser.add_argument("-slm", "--second_level_model", default="l", help="model for the two level reconciliation, upper one in three level. Can be, l for likelihood, compute likelihood (and margin ml if best), joint_ml for joint maximum likelihood to get the maximum likelihood scenario, and tree_ml for maximum likelihood amalgamated tree")
 
 
 
@@ -124,6 +125,7 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
     rec_upper_problem.n_output_scenario=args.inter_n_recphyloxml
     rec_upper_problem.dd=args.distance_dependent
     rec_upper_problem.geo=args.geo_rates
+    rec_upper_problem.slm=args.second_level_model
 
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
     rec_problem.third_level=True
@@ -184,6 +186,8 @@ else:
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
     rec_problem.dd=args.distance_dependent
     rec_problem.geo=args.geo_rates
+    rec_problem.slm=args.second_level_model
+
 
 
 
