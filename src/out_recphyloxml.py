@@ -39,18 +39,12 @@ def rec_to_string(tree_node,transfer_back=False,transfer_back_specie=None):
     le=tree_node.event_list
     #print(len(le),[(e.name,e.upper) for e in le])
 
-    new_le=list(le)
-    for e in le:
-        if e.name="I":
-            e.name="D"
-        new_le
 
     for e in le:
         e1=e.upper
         e0=e.name
         if e0=="I":
             e0="T"
-            e0="D"
 
 
 
