@@ -1,22 +1,34 @@
-A python rewrite of ALE part of a three level method in progress
+Three level Amalgamated Likelihood Estimation (TALE) is a three-level Duplication Transfer Loss (DTL) phylogenetic reconciliation method integrating gene, symbiont and host in a single framework. It is based on a reimplementation of ALE undated (https://github.com/ssolo/ALE) in python 3, requiring basic python packages. 
 
-# requirement : 
-python 3
+Duplication Transfer Loss (DTL) phylogenetic reconciliation is a set of method to compare the evolution of two levels, such as host and symbiont or gene and species, through three specific evolutionary events, duplication, horizontal transfer and loss. 
+
+
+
+# Input
+TALE takes as input three sets of trees in newick format, and without taking into account branch lengths:
++ host : binary and rooted
++ symbiont : binary, rooted or unrooted, or a distribution of binary trees to account for uncertainty, to be amalgamated
++ gene : binary and unrooted, or a distribution of binary trees to account for uncertainty, to be amalgamated
+
+
+# Requirement : 
+Python 3 with numpy, random, os, time, argparse, multiprocessing, sys
 
 # Usage : 
 
-input : lower tree and upper tree
+## 2-level :
 
-output : reconciliation scenarios in recphyloxml, see https://github.com/simonpenel/rectree2svg to get a visual representation in svg, and event frequencies.
+Input : a directory with a (or a set of) binary rooted upper tree (host, species) in newick format, and a directory with a lower tree (symbiont, or gene) in newick format
+
+Output : reconciliation scenarios in recphyloxml, see https://github.com/simonpenel/rectree2svg to get a visual representation in svg, and event frequencies for each gene families.
 
 
 	python3 src/main.py upper_dir lower_dir
-	
-Example, command line from the repo :
 
-	python3 src/main.py ex_pylori/pylori_species_tree/ ex_pylori/genes_sub2/
+## 3-level : 
 
-Usage: 
+	python3 src/main.py symbiont_dir gene_dir -tl host_dir
+
 
 
 		usage: main.py [-h] [-mdir MATCHING_DIR] [-mfile MATCHING_FILE] [-o OUTPUT]
@@ -120,40 +132,29 @@ Usage:
 
 
 
+# Included examples
 
-# todo :
-
-+ input recphyloxml as upper reconciliation
-+ add warning if reading non binary tree or unrooted
-+ output additional recphylo
-+ possibility for null transfer rate
-+ output file names
-+ save amalgamation
-+ more verbose
-+ commenting and renaming pass (for upper/intermediate/lower vocab) 
-+ 3 level: P transfer in E computation
-+ option for matching leaves name (search for the species leaf name in the beggining of the gene leaves)
-+ 3 level : possibility to store upper rec to not reconcile it twice if same
-
-# Some included examples :
+## 2-level examples
 
 + ex_pylori : an example with 1 gene tree, and 1 strains tree, and with gene tree and population tree with matching file and multiple match for one leaf, from Alexia Nguyen Trung
 		
 		python3 src/main.py example_data/ex_pylori/pylori_species_tree/ example_data/ex_pylori/genes_sub2/
 		
 		python3 src/main.py example_data/ex_pylori/pop_pylori/ example_data/ex_pylori/genes_sub2/ -mfile matching_pop_genes
++ ex_ALE : example given in ALE git (https://github.com/ssolo/ALE), with amalgamation
+
+		python3 src/main.py example_data/ex_ALE/species/ example_data/ex_ALE/gene
+
++ ex_erwinia : example with a matching directory for leaves, from Manzano Marin et al. https://doi.org/10.1038/s41396-019-0533-6
+		
+		python3 src/main.py example_data/ex_erwinia/symbiont/ example_data/ex_erwinia/genes/ -mdir example_data/ex_erwinia/lower_matching/
+		
+## 3-level examples
 
 + ex_pylori 3 level : 
 
 		python3 src/main.py example_data/ex_pylori/pop_pylori/ example_data/ex_pylori/genes_sub2/ -nre 0 -mfile example_data/ex_pylori/matching_pop_genes -tl example_data/ex_pylori/upper_level/ -imf example_data/ex_pylori/matching_pop_geo -mpf
-		
-+ ex_ALE : example given in ALE git (https://github.com/ssolo/ALE), with amalgamation
 
-		python3 src/main.py example_data/ex_ALE/species/ example_data/ex_ALE/gene
-	
-+ ex_erwinia : example with a matching directory for leaves, from Manzano Marin et al. https://doi.org/10.1038/s41396-019-0533-6
-		
-		python3 src/main.py example_data/ex_erwinia/symbiont/ example_data/ex_erwinia/genes/ -mdir example_data/ex_erwinia/lower_matching/
 		
 + ex_erwinia 3-Level : example with a matching directory for leaves, and matching file for upper level and free living symbionts, from Manzano Marin et al. https://doi.org/10.1038/s41396-019-0533-6
 		

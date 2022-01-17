@@ -38,11 +38,21 @@ def rec_to_string(tree_node,transfer_back=False,transfer_back_specie=None):
     transfer_back=False
     le=tree_node.event_list
     #print(len(le),[(e.name,e.upper) for e in le])
+
+    new_le=list(le)
+    for e in le:
+        if e.name="I":
+            e.name="D"
+        new_le
+
     for e in le:
         e1=e.upper
         e0=e.name
         if e0=="I":
             e0="T"
+            e0="D"
+
+
 
         if e0 == "S":
             s+="<speciation speciesLocation=\"" + e1 +"\"/>"
@@ -97,7 +107,10 @@ def rec_to_string(tree_node,transfer_back=False,transfer_back_specie=None):
         s+="\n"
     s+="</eventsRec>\n"
     if not tree_node.isLeaf():
-        s+=rec_to_string(tree_node.left,transfer_back=transfer_back, transfer_back_specie=e.upper)
+        s+=rec_to_string(tree_node.left,transfer_back=transfer_back, transfer_back_specie=e.upper_left_or_keeper_or_receiver)
+        #avant :
+        #s+=rec_to_string(tree_node.left,transfer_back=transfer_back, transfer_back_specie=e.upper)
+
         s+=rec_to_string(tree_node.right)
     s+="</clade>\n"
     for i in range(n_loss):

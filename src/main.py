@@ -63,7 +63,7 @@ parser.add_argument("-ncpu", "--n_cpu_multiprocess", default=4, type=int,help="n
 parser.add_argument("-tl", "--third_upper_level", default=None, help="add a directory with an upper level on top of the two previous ones, the upper become intermediate")
 parser.add_argument("-imd", "--inter_match_dir", default=None, help="add a directory for the upper intermediate matching, same format as the default levels matchings")
 parser.add_argument("-imf", "--inter_match_file", default=None, help="add a file for the upper intermediate matching, same format as for the default levels matchings")
-parser.add_argument("-tlh", "--three_level_heuristic", default="MC", help="heuristic for 3 level rec, can be either dec for decoupled or MC for montecarlo")
+parser.add_argument("-tlh", "--three_level_heuristic", default="MC", help="heuristic for 3 level rec, can be either seq (or dec) for sequential or MC for montecarlo")
 parser.add_argument("-tlMCs", "--three_level_MC_sample", default=10, type=int, help="number of samples of upper intermediate reconciliation for monte carlo heuristic of 3 level reconciliation")
 parser.add_argument("-inre", "--inter_n_rates_estimation_steps", type=int, default=5, help="number of steps in the rates estimation process for the inter upper rec, for each step we compute likelihood of reconciliation and set rates to the observed frequency for each events")
 parser.add_argument("-inres", "--inter_n_rates_estimation_rec_sample", type=int, default=100, help="in the rates estimation process of inter and upper, number of scenarios sampled to estimate event frequencies")
@@ -130,6 +130,8 @@ if args.third_upper_level and args.three_level_heuristic!="unaware":
     rec_problem=Rec_problem(symb_list=symbiont_list,amal_genes=am_tree_list)
     rec_problem.third_level=True
     rec_problem.heuristic=args.three_level_heuristic
+    if rec_problem.heuristic=="seq":
+        rec_problem.heuristic=="dec"
     if args.distance_dependent:
         rec_problem.heuristic="dd_"+args.three_level_heuristic
 

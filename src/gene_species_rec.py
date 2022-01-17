@@ -392,10 +392,13 @@ def compute_upper_gene_P_joint_ml(rec_problem):
             if bool_continue_mult_match:
                 if bool_continue_mult_match2:
                     b_l=[]
+                    b_l_event=[]
                     if not e.isLeaf():
                         for cL,cR in c.log_child_frequencies:
                             b_l.append(P[e.left][cL]+P[e.right][cR]+c.log_child_frequencies[(cL,cR)]+s_r)
                             b_l.append(P[e.left][cR]+P[e.right][cL]+c.log_child_frequencies[(cL,cR)]+s_r)
+                            b_l_event.append("S")
+                            b_l_event.append("S")
                         if c.is_leaf():
                             if mult_gene_match:
                                 c_match_c=c.match
@@ -403,11 +406,21 @@ def compute_upper_gene_P_joint_ml(rec_problem):
                                 c_match_c=[c.match]
                             if inter_list(c_match_c, e.right.leaves()):
                                 b_l.append(E[e.left]+P_TL[e.right][c]+s_r)
+                                b_l_event.append("SL")
+
+
                             if inter_list(c_match_c, e.left.leaves()):
                                 b_l.append(E[e.right]+P_TL[e.left][c]+s_r)
+                                b_l_event.append("SL")
+
                         else:
                             b_l.append(E[e.left]+P_TL[e.right][c]+s_r)
                             b_l.append(E[e.right]+P_TL[e.left][c]+s_r)
+                            b_l_event.append("SL")
+                            b_l_event.append("SL")
+
+
+
                     #incomplete sorting event
                     if not i_r is None:
                         if not e.isLeaf():
@@ -422,6 +435,8 @@ def compute_upper_gene_P_joint_ml(rec_problem):
                                 b_l.append(b8)
                                 b_l.append(b9)
                                 b_l.append(b10)
+                                for i in range(4):
+                                    b_l_event.append("I")
 
 
                     for cL,cR in c.log_child_frequencies:
@@ -431,6 +446,8 @@ def compute_upper_gene_P_joint_ml(rec_problem):
                                 b4=c.log_child_frequencies[(cL,cR)]+t_r+P_transfer[e][h]+P[h][cR]+P[e][cL]
                                 b_l.append(b3)
                                 b_l.append(b4)
+                                for i in range(2):
+                                    b_l_event.append("T")
                         else:
 
 
@@ -440,14 +457,20 @@ def compute_upper_gene_P_joint_ml(rec_problem):
                             b_l.append(b4)
 
 
+                            for i in range(2):
+                                b_l_event.append("T")
 
 
                         #duplication
 
                         b6=d_r+P[e][cL]+P[e][cR]+c.log_child_frequencies[(cL,cR)]
                         b_l.append(b6)
+                        b_l_event.append("D")
 
                     b=max(b_l)
+                    b_store[e]=b
+                    #print(b_l, b_l_event, c.name, e.isLeaf(), b)
+
                     P_TL[e][c]=b
         if c.is_leaf():
             transfer_list_e=[]
@@ -496,6 +519,7 @@ def compute_upper_gene_P_joint_ml(rec_problem):
                             b3=s_r+E[e.right]+P[e.left][c]
                             b_l.append(b3)
                     b=max(b_l)
+                    #print(b==b_store[e])
                     P[e][c]=b
                 else:
                     b_l=[]
