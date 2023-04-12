@@ -29,12 +29,10 @@ from event_frequency_output import output_frequency_for_all_family,save_likeliho
 
 from rec_classes import*
 
-### arbre espèce raciné, arbre genes non raciné, possibilité de liste d'arbre pour amalgamation, possibilité plusieurs arbres de gènes (plusieurs fichiers pour plusieurs famille de gènes)
-
-### pour l'amalgamation, je considère tout les arbres de la liste (je fais sans burn in), je ne sais pas exactement ce que fait ALE (s'il discard les premiers arbres ou non)
+### amalgamation is done with all trees in the list (no burn in or subsample)
 
 """
-### pour exemple ALE : matching des feuilles implicite avec feuilles des arbres d'espèces et de gènes de même nom, liste d'arbre avec amalgamation
+### for ALE example : matching of leaves is implicit with species and genes leaves with same name. List of tree for amalgamation. 
 data_dir="/home/hmenet/Documents/rewrite_ALE/ex_ALE/"
 symbiont_dir="species/"
 gene_dir="gene/"
@@ -208,7 +206,7 @@ rec_problem.n_output_scenario=args.n_recphyloxml
 
 """
 
-RESTE À AJOUTER
+TO add
 
 less_output=args.inter_less_output
 verbose=args.verbose

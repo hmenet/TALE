@@ -12,7 +12,7 @@ from rec_aux_func import log_add, log_minus, log_add_list, is_mult_match, inter_
 
 
 ################################
-#vraisemblance rec symbiote gene
+#likelihood rec symbiote gene
 ################################
 
 #return the positive solution we're seeking
@@ -21,7 +21,7 @@ def solution_polynome_snd(a,b,c):
     return (-b - delta**0.5)/(2*a)
 
 
-#pareil que TL_compute_parasite_E_5_order mais peut prendre une lsite de parasite en entrée en donnant la concatenation des post order de ces parasites
+#same as TL_compute_parasite_E_5_order but can take a list of symbiont as input by taking the concatenation of their post order traversals list
 def compute_upper_gene_E(rec, P_transfer=None):
     d_r= rec.rates.dr
     l_r= rec.rates.lr
@@ -69,7 +69,7 @@ def compute_upper_gene_P(rec_problem):
     else:
         return compute_upper_gene_P_l(rec_problem)
 
-#proba de transfert pre processed, dans P_transfer[e][e2] de e vers e2
+#transfer probabilities are preprocessed, P_transfer[e][e2] contain the probability from e to e2
 #c_match = clade_to_matched_node
 def compute_upper_gene_P_l(rec_problem):
 
@@ -113,7 +113,7 @@ def compute_upper_gene_P_l(rec_problem):
             P_TL[c.match][c]=0
     else:
         for c in am_tree.leaves:
-            #c_match[c] si mult match c'est une liste
+            #c_match[c] in case of mult match, it is a list
             for species_tmp in c.match:
                 P[species_tmp][c]=(-1)*np.log(len(c.match))
                 P_TL[species_tmp][c]=(-1)*np.log(len(c.match))
@@ -325,7 +325,6 @@ def compute_upper_gene_P_l(rec_problem):
 
 
 
-#proba de transfert pre processed, dans P_transfer[e][e2] de e vers e2
 #new version to account for sampling ml scenario and ml amalgamated tree
 def compute_upper_gene_P_joint_ml(rec_problem):
 
@@ -542,7 +541,6 @@ def compute_upper_gene_P_joint_ml(rec_problem):
     likelihood=max([P[k][am_tree] for k in P.keys()])
     return P, P_TL,likelihood, correction_ancestrale_size
 
-#proba de transfert pre processed, dans P_transfer[e][e2] de e vers e2
 #new version to account for sampling ml scenario and ml amalgamated tree
 def compute_upper_gene_P_ml_tree(rec_problem):
 
@@ -587,7 +585,7 @@ def compute_upper_gene_P_ml_tree(rec_problem):
             P_TL[c.match][c]=0
     else:
         for c in am_tree.leaves:
-            #c_match[c] si mult match c'est une liste
+            #c_match[c] in case of mult match it is a list
             for species_tmp in c.match:
                 P[species_tmp][c]=(-1)*np.log(len(c.match))
                 P_TL[species_tmp][c]=(-1)*np.log(len(c.match))

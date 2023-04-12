@@ -34,7 +34,7 @@ def sample_gene_upper_rec(rec, best=False):
 
     l_sampled_events=in_sampling_scenario.event_list#list of all the events that compose the scenario we will have sampled at the end of this function
 
-    gene=am_tree.reverse_post_order[0] #root des clades
+    gene=am_tree.reverse_post_order[0] #clades root
     parasite_post_order=rec.upper.post_order
 
     d_r= rec.rates.ldr
@@ -58,7 +58,7 @@ def sample_gene_upper_rec(rec, best=False):
     while x_current<x:
         k+=1
         x_current=log_add(x_current, P[parasite_post_order[k]][gene])
-    #il faudrait des proba d'origination
+    #probability of origination could be added here
     r[gene].append(parasite_post_order[k])
     reconstructed_lower.match=r[gene]
 
@@ -69,7 +69,7 @@ def sample_gene_upper_rec(rec, best=False):
         reconstructed_tree_node=am_tree_to_reconstructed[c]
 
         #for c in clade_post_order:
-        TL_done=False #on autorise un seul TL
+        TL_done=False #only 1 TL event per gene node
         if len(r[c])>0:
             queue_species=[r[c][0]]
         else:
@@ -87,11 +87,10 @@ def sample_gene_upper_rec(rec, best=False):
                 bool_continue_mult_match=not (c.is_leaf() and e in c.match)
 
             if bool_continue_mult_match:
-                #cas d'arrêt
-                #on étend P[e][u] pour choisir ce qu'il s'est produit
-                l_proba=[]#liste des proba des événéments
-                l_event=[]#liste des événements, un evenement est un tuple, de taille 2 lorsqu'on fait se déplacer le parasite (lui et son nouveau match), 4 lorsqu'on passe à ses enfants (les deux enfants et leurs deux matchs), et 3 lors d'un TL, pour changer la valeur du compteur TL si choisi
-                #liste des evenements possibles pour cet espece dans celle la
+                #stop case
+                #we then extend P[e][u] to choose one of the events
+                l_proba=[]#list of events probabilities
+                l_event=[]#list of events, an event is a tuple, of size 2 if the lower node does not change (the lower node and its new match), 4 if the lower the speciate, the two children and their matches, and 3 with TL events to change the value of the TL counter.
                 if not e.isLeaf():
                     for (cL,cR) in c.log_child_frequencies:
                         l_proba.append(c.log_child_frequencies[(cL,cR)]+s_r+P[e.left][cL]+P[e.right][cR])
@@ -99,7 +98,7 @@ def sample_gene_upper_rec(rec, best=False):
                         l_proba.append(c.log_child_frequencies[(cL,cR)]+s_r+P[e.left][cR]+P[e.right][cL])
                         l_event.append(("S", e.left, cR, e.right, cL))
 
-                        #incomplete sorting event
+                        #a kind of incomplete sorting event
                         if not i_r is None:
                             l_proba.append(c.log_child_frequencies[(cL,cR)]+i_r+P[e.left][cL]+P[e][cR])
                             l_event.append(("I", e.left, cL, e, cR))

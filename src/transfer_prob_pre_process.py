@@ -16,13 +16,9 @@ import arbre
 #####
 
 
-
-
-#calcul des proba de transferts de gène entre parasite
-
-#rates_hp : taux evolution hote parasite
-#match_hp: real match entre parasite et hôte, dict étant donné un parasite renvoie la liste de ses hôtes
-#E : probabilité d'être perdu dans l'hôte
+#rates_hp : host symbiont rates
+#match_hp: real match between symbiont and host, dict that given a symbiont node give the list of its host nodes
+#E : probability to be lost
 #heuristic is the name of the chosen heuristic, unaware, alea, sequential
 #monte_carlo and decouple are sequential
 #host_info depend on the heuristics
@@ -46,7 +42,7 @@ def compute_transfer_prob(rec):
 def prob_transfer_alea(rec):
     P_hp = rec.upper_rec.P
     P_transfer=dict()
-    #P_transfer[p1][p2] : proba de transférer entre les parasites p1 et p2
+    #P_transfer[p1][p2] : proba to transfer between parasites p1 et p2
     for p1 in parasite_post_order:
         P_transfer[p1]=dict()
         for p2 in parasite_post_order:
@@ -72,12 +68,12 @@ def prob_transfer_sequential(rec):
     l_r= rec.upper_rec.rates.lr
     t_r= rec.upper_rec.rates.tr
     s_r=rec.upper_rec.rates.sr
-    #on calcule d'abord la proba de transfert entre de gène de parasite sachant l'hôte de chacun des parasites
+    # we first compute the transfer proba between genes knowing the host of these parasites
     P_transfer_h=dict()
-    #P_transfer_h[h1][h2] : proba de transfert de gène entre un parasite placé dans l'hôte h1 et un dans l'hôte h2
+    #P_transfer_h[h1][h2] : transfer proba of a gene in a parasite in host h1 and one in host h2
     for h in host_post_order:
         P_transfer_h[h]=dict()
-    #calcul du nombre de parasite dans chaque hôte
+    #compute the number of parasite in each host
     match_hp_inv=dict()
     for p in inter_list.post_order:
         for h in p.match:
@@ -86,7 +82,7 @@ def prob_transfer_sequential(rec):
             else:
                 if not p in match_hp_inv[h]:
                     match_hp_inv[h].append(p)
-    #N_parasites[e] : nombre de parasite dans l'hôte e
+    #N_parasites[e] : number of parasite in host e
     N_parasites=dict()
     for h in match_hp_inv.keys():
         N_parasites[h]=len(match_hp_inv[h])
@@ -108,7 +104,7 @@ def prob_transfer_sequential(rec):
                 P_transfer_h[h][h]=1/N_parasites[h]
         else:
             for target_e in host_post_order:
-                if target_e in match_hp_inv:#si on ne possède aucun parasite pas de calcul
+                if target_e in match_hp_inv:#if no parasites, no computation
                     P=dict()
                     P_TL=dict()
                     #target_e # where we want to transfer
@@ -118,7 +114,6 @@ def prob_transfer_sequential(rec):
                         a=0
                         b=0
                         if e==target_e:
-                            #N_parasites[e] : nombre de parasite dans l'hôte e
                             b+=1/N_parasites[e]
                         if not e.isLeaf():
                             b+=s_r*(P_TL[e.left]*E[e.right] + P_TL[e.right]*E[e.left])
@@ -131,7 +126,6 @@ def prob_transfer_sequential(rec):
                         a=0
                         b=0
                         if e==target_e:
-                            #N_parasites[e] : nombre de parasite dans l'hôte e
                             b+=1/N_parasites[e]
                         if not e.isLeaf():
                             b+=s_r*(P[e.left]*E[e.right] + P[e.right]*E[e.left])
@@ -147,7 +141,7 @@ def prob_transfer_sequential(rec):
                     for e in host_post_order:
                         P_transfer_h[e][target_e]=P[e]
     P_transfer=dict()
-    #P_transfer[p1][p2] : proba de transférer entre les parasites p1 et p2
+    #P_transfer[p1][p2] : transfer proba between parasites p1 and p2
 
     for p1 in inter_list.post_order:
         P_transfer[p1]=dict()
@@ -178,7 +172,7 @@ def distance_dependent(rec):
     P_transfer=dict()
     host_post_order=rec.upper.post_order
     t_r=rec.rates.tr
-    #dans ce cas on ne compte pas les i dans la liste des transferts possibles
+    #in this case we do not count the i in the list of possible transfers
     if rec.rates.ir != 0:
         ir=True
     else:

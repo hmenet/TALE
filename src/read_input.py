@@ -18,7 +18,7 @@ def construct_file_list(directory):
         liste_fichiers.extend(fichiers)
     return liste_fichiers
 
-#selon si fonction considère liste d'arbre ou arbre (pour amalgamation)
+#depending on wether we take into account a list of tree for amalgamation or single trees
 def construct_tree_list(directory, amalgamation=False):
     tree_list=[]
     tree_file_list=construct_file_list(directory)
@@ -42,7 +42,6 @@ def construct_tree_list(directory, amalgamation=False):
 ##  input matching dir or file
 #return a  dict matching lower leaves to host leaves
 
-#voir selon ce qu'on veut en faire apres
 def construct_leaves_matching(matching_file):
     d=dict()
 
@@ -86,13 +85,13 @@ def construct_leaves_matching_dir(matching_directory, file_list):
         new_file_list.append(s)
     leaf_matching_list=[]
     for i_file in range(len(new_file_list)):
-        #pour correspondre aux noms donnés par sagephy
+        #for sagephy correspondances
         d=construct_leaves_matching(matching_directory+new_file_list[i_file])
         leaf_matching_list.append(d)
     return leaf_matching_list
 
 
-#à chaque nom de noeud renvoie le noeud correspondant
+#link node name and nodes
 def construct_name_to_leaves(tree):
     d=dict()
     for u in tree.leaves():
@@ -106,7 +105,7 @@ def construct_name_to_clade(am_tree):
             d[u.clade_leaves[0]]=u
     return d
 
-#à chaque nom d'arbre renvoie l'arbre corrspondant
+#link tree name and tree
 def construct_name_to_tree(tree_list):
     d=dict()
     for t in tree_list:
@@ -116,7 +115,7 @@ def construct_name_to_tree(tree_list):
 #always mult match output
 def name_matching_to_tree_matching(name_to_node_host, name_to_node_lower,leaf_matching, tree=False):
     for lower_node_name in leaf_matching:
-        if lower_node_name in name_to_node_lower : #sinon la feuille a été pruned de l'arbre
+        if lower_node_name in name_to_node_lower : #else the leaf was pruned
             lower_node=name_to_node_lower[lower_node_name]
             for host_info in leaf_matching[lower_node_name]:
                 if len(host_info)==2:
@@ -136,7 +135,6 @@ def name_matching_to_tree_matching(name_to_node_host, name_to_node_lower,leaf_ma
 
 def all_name_matching_to_tree_matching(symbiont_list, am_tree_list, leaf_matching_list):
     name_to_node_symbionts=dict()
-    #ajouter un test pour savoir quel format est leaf matching list, arbre + feuille ou juste feuille ?
     for symbiont in symbiont_list:
         name_to_node_symbionts[symbiont.tree_name]=construct_name_to_leaves(symbiont)
     for clade_id in range(len(am_tree_list)):
@@ -160,7 +158,7 @@ def all_name_matching_to_tree_matching_onedict(symbiont_list, am_tree_list, lowe
 
 
 
-#renomme tout les noeuds sauf les feuilles
+#rename all nodes except the leaves
 def rename_tree(tree,root_name,n):
     if not tree.isLeaf():
         #if tree.name == None:

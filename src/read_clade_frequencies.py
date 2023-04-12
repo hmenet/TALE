@@ -13,34 +13,26 @@ Created on Thu Jan 16 14:19:06 2020
 import arbre
 from rec_classes import Amalgamated_tree
 
-#il faut quelque chose de hashable dans un dictionnaire donc on
-#prend les tuples obtenu a partir les listes triés de feuilles communes
-#et on va utiliser un dictionnaire qui prend en entrée ces tuples de feuilles
+#clades are implemented in a hashable type to be used with a dictionary as tuples of sorted leaves
 
-#compter les bipartitions et tripartitions
-
-#l'idée, si j'ai bien compris, c'est 3 choses
-#1 dans l'arbre de gene on ne regarde plus les sommets mais les clades (ensembles de feuilles) (puisqu'il n'y a plus de sommet car plus d'arbre, mais un ensemble d'arbre)
-#2 un clade n'a pas 2 fils comme un sommet d'un arbre mais plein de couples possibles qui correspondent à ses bipartitions
-#3 on associe à chaque clade sa fréquence dans l'échantillon pour le pondérer
-
-#il faut donc connaitre les fréquences des partitions de clades
-#un clade : liste de feuilles, rangé par indice ? ou dans l'ordre donné par post order ?
-#liste de clade
+#idea of the algorithm
+#1 : in the gene tree, we do not look at the nodes but at the set of leaves of the node
+#2 a clade does not have 2 children, but multiple possible couple of children, possible bipartition 
+#3 we associate to each clade the frequencies of all bipartitions seen in the sample
 
 def sorted_common_leaves_from_tree(tree):
     l=tree.leaves_unrooted()
-    l_leaves=[i.name for i in l]#maintenant les feuilles de la liste ont des indices qui correspondent bien entre arbre
+    l_leaves=[i.name for i in l]
     l_leaves.sort()
     return l_leaves
 
 def sorted_common_leaves_from_leaves(leaves):
-    l_leaves=[i.name for i in leaves]#maintenant les feuilles de la liste ont des indices qui correspondent bien entre arbre
+    l_leaves=[i.name for i in leaves]
     l_leaves.sort()
     return l_leaves
 
 
-#les clades sont des indices entiers qui commence à 0
+#clades are numbered, starting at 0
 
 #try to add a clade, if not present
 #tree_clade : a tree, the clade will be its leaves
@@ -54,7 +46,6 @@ def clade_from_tree(tree_clade, clade_elements, clade_keys):
         clade=clade_keys[leaves_clade]
     else:
         clade=n_clade
-        #on met à jour clade_elements avec les elements de ce clade
         clade_elements[clade]=leaves_clade
         clade_keys[leaves_clade]=clade
     return clade
@@ -67,19 +58,14 @@ def clade_from_leaves(leaves_clade, clade_elements, clade_keys):
         clade=clade_keys[leaves_clade]
     else:
         clade=n_clade
-        #on met à jour clade_elements avec les elements de ce clade
         clade_elements[clade]=leaves_clade
         clade_keys[leaves_clade]=clade
     return clade
 
 
-
-#a la fin on veut travailler seulement avec des clades
-# et être simplement capable de retrouver les feuilles correspondant à chaque clade
-
-#clade_frequencies[u][(v,w)]=0# bipartition v w sachant bipartition u u barre
-#l_tree : liste d'arbre, dont on veut obtenir les fréquences des clades
-#il faut faire attention à prendre les trois racines possibles pour chaque bipartition
+#clade_frequencies[u][(v,w)]=0# bipartition v w knowing bipartition u \bar{u}
+#l_tree : list of tree on which we want the clade frequencies
+#for each bipartitions, 3 possible roots.
 
 
 def partition_counter_one_tree(tree, clade_elements, clade_keys, bipartition_number, tripartition_number):
@@ -88,39 +74,35 @@ def partition_counter_one_tree(tree, clade_elements, clade_keys, bipartition_num
         arbre.from_rooted_to_un(tree)
     tree_post_order = tree.post_order_traversal_unrooted()
     all_leaves=tree.leaves_unrooted()
-    clade1=clade_from_leaves(all_leaves, clade_elements, clade_keys)#on definit le premier clade comme celui de toutes les feuilles
+    clade1=clade_from_leaves(all_leaves, clade_elements, clade_keys)#clade 0 is the clade of all leaves
     for e in tree_post_order:
         if not e.isRoot():
-            #on va couper l'arete qui relie e a son pere, creant un bipartition
-            c1=e.leaves_unrooted()#la moitié de la bipartition
+            #we cut the edge between e and its parent to create a bipartition
+            c1=e.leaves_unrooted()#first half of the bipartition
             c2=[leaf for leaf in all_leaves if not leaf in c1]
             clade1=clade_from_leaves(c1, clade_elements, clade_keys)
             clade2=clade_from_leaves(c2, clade_elements, clade_keys)
             bipartition=(min(clade1, clade2), max(clade1, clade2))
             tmp_compte_a_prendre=1
-            #en unrooted la racine est un vrai noeud
-            #if not e.isRoot() and e.parent==tree:
-            #    tmp_compte_a_prendre=0.5 #la racine n'est pas un vrai noeud mais une branche
             if bipartition in bipartition_number:
                 bipartition_number[bipartition]+=tmp_compte_a_prendre
             else:
                 bipartition_number[bipartition]=tmp_compte_a_prendre
 
-        #maintenant on compte la tripartition generé en supprimant le noeud considéré
-        #ici pas besoin de faire ni les feuilles, ni la racine puisque ce n'est pas un vrai noeud
+        #now, we count the tripartitions generated by deleting the considered node
+        #deleting leaves and root do not create tripartitions
         if not e.isLeaf():
-            #on a deja calculé un des clades de la tripartition, c2
-            #on calcule maintenant les deux autres
+            #we already computed one of the clades, c2
+            #we now compute the remaining 2
             if not e.isRoot():
                 child_clade1=clade_from_tree(e.left, clade_elements, clade_keys)
                 child_clade2=clade_from_tree(e.right, clade_elements, clade_keys)
                 child_clade3=clade2
             else:
-                #si c'est la racine on a encore calculé aucun des clades
+                #if its the root, no clades have been computed
                 child_clade1=clade_from_tree(e.left, clade_elements, clade_keys)
                 child_clade2=clade_from_tree(e.right, clade_elements, clade_keys)
                 child_clade3=clade_from_tree(e.right2, clade_elements, clade_keys)
-            #peut etre que dans le preprocess il vaudra mieux parcourir d'abord les bipartitions ?
             l_tmp=[child_clade1, child_clade2, child_clade3]
             l_tmp.sort()
             c1_tmp, c2_tmp,c3_tmp=l_tmp
@@ -130,7 +112,7 @@ def partition_counter_one_tree(tree, clade_elements, clade_keys, bipartition_num
             else:
                 tripartition_number[tripartition]=1
 
-#renvoie le clade correspondant à l'union des deux clades données en entrées
+#return the clade corresponding to the union of the two input clades
 def union_clade(c1,c2,clade_elements, clade_keys):
     l=list(clade_elements[c1])
     l+=list(clade_elements[c2])
@@ -139,7 +121,7 @@ def union_clade(c1,c2,clade_elements, clade_keys):
     return c
 
 
-#on fait attention a ce que les arbres ne sont pas enracinés
+#trees are unrooted
 def compute_clade_frequencies(l_tree):
     bipartition_number=dict()
     tripartition_number=dict()
@@ -155,9 +137,9 @@ def compute_clade_frequencies(l_tree):
     for c in range(n_clade):
         clade_frequencies[c]=dict()
     for c1,c2,c3 in tripartition_number:
-        #pour faire mieux (plus rapide) il faudrait garder en mémoire les relations de parenté entre les clades
+        #to be faster we would have to keep in memory the relations between the clades 
         n_tripartition=tripartition_number[(c1,c2,c3)]
-        #a1 a2 sachant a, et ab représente a barre
+        #a1 a2 knowing a, and ab represent \bar{a}
         for tmp1,tmp2,tmp3 in [(c2,c3,c1),(c1,c3,c2),(c1,c2,c3)]:
             #a,a1,a2,ab = union_clade[(min(tmp1,tmp2), max(tmp1,tmp2))],tmp1,tmp2,tmp3
             #print("a")
@@ -169,7 +151,7 @@ def compute_clade_frequencies(l_tree):
                     b_continue=False
             if b_continue:
                 clade_frequencies[a][(min(a1,a2),max(a1,a2))]=n_tripartition/bipartition_number[(min(a,ab),max(a,ab))]
-    #pour la fréquence de bipartition du premier clade il n'y a pas de sachant que, pas de tripartition
+    #for the bipartition frequency of the first clade, there is no knowing, no tripartition
     s=sum([bipartition_number[u] for u in bipartition_number.keys()])
     for c1,c2 in bipartition_number:
         clade_frequencies[0][(min(c1,c2),max(c1,c2))]=bipartition_number[(min(c1,c2),max(c1,c2))]/s
@@ -183,7 +165,7 @@ def compute_clade_frequencies_multiple_families(l_tree_by_family):
     am_tree_list=[]
     for l_tree in l_tree_by_family:
         amalgamated_tree=compute_clade_frequencies(l_tree)
-        #les noms des arbres sont "nom"+str(id_counter), donc pour avoir le nom, on enlève le 0 du nom du premier arbre
+        #tree list are given as "name"+str(id_counter)
         am_tree_list.append(amalgamated_tree)
     return am_tree_list
 

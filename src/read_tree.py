@@ -40,7 +40,7 @@ def read_tree_string(s, return_end_point=False, starting_point=0):
                     node.right2=arbre.Tree()
                     node.right2.parent=node
                     node.right2.root=node.root
-                    node.right2.id=node.id*2+1.5#noeud qui apparait quand l'arbre n'est pas raciné
+                    node.right2.id=node.id*2+1.5#node to model unrooted binary tree
                     node=node.right2
                 else:
                     print("Wasn't expecting multifurcating tree")
@@ -81,7 +81,7 @@ def read_tree(file):
     s=f.read()
     return read_tree_string(s)
 
-#liste d'arbre pour amalgamation, tous dans le même fichier
+#for amalgamation, all trees to amalgamate are in the same file
 def read_mult_tree(file):
 
     try:
@@ -141,7 +141,7 @@ def read_tree_string_sagephy(s, more_output=False):
                     node.right2=arbre.Tree()
                     node.right2.parent=node
                     node.right2.root=node.root
-                    node.right2.id=node.id*2+1.5#noeud qui apparait quand l'arbre n'est pas raciné
+                    node.right2.id=node.id*2+1.5#node to model unrooted binary tree
                     node=node.right2
                 else:
                     print("Wasn't expecting multifurcating tree")
@@ -169,7 +169,6 @@ def read_tree_string_sagephy(s, more_output=False):
                 for u in l_word:
                     l_word2.append(u.split(sep="="))
                 if not node in nodes_info:
-                    #voir ce qu'on fait avec les infos dans l'autre cas
                     nodes_info[node]=l_word2
 
 

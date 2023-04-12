@@ -54,14 +54,12 @@ class Tree:
         self.parasite_birth_rate=None
         self.parasite_death_rate=None
         self.parasite_transfer_rate=None
-        self.parasite_speciation_rate=None #c'est le meme que speciation rate mais comme on normalise pas par la meme chose, on obtient deux valeurs differentes
+        self.parasite_speciation_rate=None
         
     def isLeaf(self):
         return self.right == None
     
-    #on peut surement faire beaucoup pour cette fonction
     def isRoot(self):
-        #return self.root == self
         return self.parent == None
 
     def isRooted(self):
@@ -95,10 +93,6 @@ class Tree:
             if self.right2 is None:
                 return self.right.leaves() + self.left.leaves()
             else: 
-                #if not self.isRoot():
-                #    print("esatrea",self.root.tree_name,self.name)
-                #if self.isRoot():
-                #    print("iuetr")
                 return self.right.leaves() + self.left.leaves() + self.right2.leaves()
         
     def leaves_unrooted(self):
@@ -224,68 +218,6 @@ class Tree:
     
     #delete all leaves that do not reach time t = 1
     #and fuse the nodes with only one child to their child
-    """
-    #modifie l'entrée    
-    def prune_tree(self):
-        #cette condition est là pour ne pas relancer sur un noeud qu'on a déjà supprimer
-        #comme on lance sur les deux fils à la fin, cela peut arriver
-        if not(self.inTree==-1):
-            if not self.isLeaf():
-                if self.left.isLeaf() and self.left.time <1:
-                    if self.isRoot():
-                        if self.right.isLeaf():
-                            self.graphviz_tree()
-                            raise NameError("On prune et il ne reste que la racine et une feuille")
-                        else:
-                            self.time=self.right.time
-                            #on supprime self.left et self.right
-                            self.left.inTree=-1
-                            self.right.inTree=-1
-                            self.left=self.right.left
-                            self.right=self.right.right
-                            self.left.parent=self
-                            self.right.parent=self
-                            self.prune_tree()
-                    else:
-                        self.right.birth_time=self.birth_time
-                        self.right.parent=self.parent
-                        if self.parent.left == self:
-                            self.parent.left=self.right
-                        else:
-                            self.parent.right=self.right
-                        #on supprime self et self.left
-                        self.inTree=-1
-                        self.left.inTree=-1
-                        self.parent.prune_tree()
-                else:
-                    if self.right.isLeaf() and self.right.time <1:
-                        if self.isRoot():
-                            if self.left.isLeaf():
-                                self.graphviz_tree()
-                                raise NameError("On prune et il ne reste que la racine et une feuille")
-                            else:
-                                self.time=self.left.time
-                                self.left.inTree=-1
-                                self.right.inTree=-1
-                                self.right=self.left.right
-                                self.left=self.left.left
-                                self.left.parent=self
-                                self.right.parent=self
-                                self.prune_tree()
-                        else:
-                            self.left.birth_time=self.birth_time
-                            self.left.parent=self.parent
-                            if self.parent.left == self:
-                                self.parent.left=self.left
-                            else:
-                                self.parent.right=self.left
-                            self.inTree=-1
-                            self.right.inTree=-1
-                            self.parent.prune_tree()
-                    else:
-                        self.left.prune_tree()
-                        self.right.prune_tree()
-    """      
     def prune_with_match(self):
         self.prune_tree()
         self.aux_prune_with_match()
@@ -340,8 +272,7 @@ class Tree:
             self.left.aux_copy_lower_match(arbre.left)
             self.right.aux_copy_lower_match(arbre.right)
     
-    #pour copier l'hôte, il faut garder un mémoire les correspondances entre la copie et l'original 
-    #afin de pouvoir mettre à jour les match par la suite
+    #to copy the host, correspondances between the original and the host have to be stored, to then be able to match the nodes of the copy to the nodes matched to the original
     def copy_host(self):
         d=dict()
         arbre=Tree()
@@ -359,8 +290,8 @@ class Tree:
             self.left.aux_copy_host(arbre.left, d)
             self.right.aux_copy_host(arbre.right, d)
     
-    #prend en entrée un dictionnaire des correspondances entre copie et originale des arbres déjà copiés
-    #marche pour gène et parasite
+    #take as input a dictionary of the correspondances between copy and original
+    #works for genes and symbiotes levels
     def copy_with_match(self, d):
         arbre=Tree()
         arbre.name=self.name+"copie"
@@ -424,11 +355,9 @@ class Tree:
             return d
 
         
-    #modif pour garder en mémoire tout les noms noeuds effacés
-    #modifie l'entrée    
+    #modify the input     
     def prune_tree(self):
-        #cette condition est là pour ne pas relancer sur un noeud qu'on a déjà supprimer
-        #comme on lance sur les deux fils à la fin, cela peut arriver
+        #condition to not launch on a node already deleted
         if not(self.inTree==-1):
             if not self.isLeaf():
                 if self.left.isLeaf() and self.left.time <1:
@@ -439,7 +368,7 @@ class Tree:
                         else:
                             self.time=self.right.time
                             self.pruned_name_list=self.pruned_name_list + self.right.pruned_name_list
-                            #on supprime self.left et self.right
+                            #delete self.left et self.right
                             self.left.inTree=-1
                             self.right.inTree=-1
                             self.left=self.right.left
@@ -454,7 +383,7 @@ class Tree:
                             self.parent.left=self.right
                         else:
                             self.parent.right=self.right
-                        #on supprime self et self.left
+                        #delete self et self.left
                         self.inTree=-1
                         self.left.inTree=-1
                         self.right.pruned_name_list=self.right.pruned_name_list + self.pruned_name_list
@@ -464,7 +393,7 @@ class Tree:
                         if self.isRoot():
                             if self.left.isLeaf():
                                 self.graphviz_tree()
-                                raise NameError("On prune et il ne reste que la racine et une feuille")
+                                raise NameError("Prune but only the root and a leaf remaining")
                             else:
                                 self.time=self.left.time
                                 self.pruned_name_list=self.pruned_name_list + self.left.pruned_name_list
@@ -502,7 +431,7 @@ class Tree:
         else:
             return self.parent.n_ancestor(n-1)
         
-    #optimisable
+    #could be optimized
     def n_leaves_ancestor(self,n):
         if len(self.leaves())==n:
             return self
@@ -518,7 +447,7 @@ def distance_ascendant(node1, node2):
     else:
         return 1 + distance_ascendant(node1,node2.parent)
 
-#on peut surement faire mieux comme complexité
+#could be optimized
 def distance(node1, node2):
     if node1.root==node2.root:
         #because isAscendant is strict
@@ -535,7 +464,6 @@ def distance(node1, node2):
         #we do as if the two trees were joined at their roots
         return distance(node1,node1.root)+distance(node2,node2.root)+2
     
-#meme construc_real_match que dans parasite fixe mais adapte a un arbre avec match en entree, pour l'affichage apres prune
 def tree_construct_real_match(tree):
     tmp=dict()
     match=dict()
@@ -549,7 +477,6 @@ def tree_construct_real_match(tree):
                     bro=i.parent.right
                 else:
                     bro=i.parent.left
-                #if not(match[i.parent].isAscendant(match[bro])):#en fait c'est plus complexe, par exemple si les deux fils descendent de la même branche fille
                 c=match[i.parent].chemin(match[i])
                 if match[i.parent].isAscendant(match[bro]):
                     c_bro=match[i.parent].chemin(match[bro])
@@ -581,8 +508,7 @@ def aux_save_tree(f,tree):
     if not tree.name==None:
         f.write(tree.name)
 
-#on va enregistrer les noms des noeuds et la structure de l'arbre 
-#en Newick
+#save node names and tree topology in newick
 def save_tree(tree, file):
     f=open(file, "w")
     aux_save_tree(f, tree)
@@ -617,7 +543,7 @@ def read_tree_string(s):
                     node.right2=Tree()
                     node.right2.parent=node
                     node.right2.root=node.root
-                    node.right2.id=node.id*2+1.5#noeud qui apparait quand l'arbre n'est pas raciné
+                    node.right2.id=node.id*2+1.5#additional node to model unrooted binary tree 
                     node=node.right2
                 else:
                     print("Wasn't expecting multifurcating tree")
@@ -706,7 +632,7 @@ def read_tree_string_sagephy(s):
                     node.right2=Tree()
                     node.right2.parent=node
                     node.right2.root=node.root
-                    node.right2.id=node.id*2+1.5#noeud qui apparait quand l'arbre n'est pas raciné
+                    node.right2.id=node.id*2+1.5#unrooted binary tree
                     node=node.right2
                 else:
                     print("Wasn't expecting multifurcating tree")
@@ -731,7 +657,6 @@ def read_tree_string_sagephy(s):
                 for u in l_word:
                     l_word2.append(u.split(sep="="))
                 if not node in nodes_info:
-                    #voir ce qu'on fait avec les infos dans l'autre cas
                     nodes_info[node]=l_word2
                     
                 

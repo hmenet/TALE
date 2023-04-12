@@ -217,7 +217,7 @@ class Amalgamated_tree:
             return(len(clade.clade_leaves))
         l=self.liste()
         l.sort(key=order_clade, reverse=True)
-        #ordre donné par la taille des clades est bien un ordre qui empeche les fils d'apparaitre avant leur parent
+        #the order given by the size of clades is an order than make children clades appear after their parents
         self.reverse_post_order=l
         return l
 

@@ -10,6 +10,7 @@ from out_recphyloxml import save_recphyloxml_from_l_event
 from read_input import read_input
 from arbre import save_tree, Tree
 
+### attempt to infer intermediate compartments from lower and upper trees, with a bayesian approach, guided by the upper lower reconciliation
 
 def origination_proba(l_event_by_family):
     orig_prob=dict()
@@ -24,8 +25,7 @@ def origination_proba(l_event_by_family):
         orig_prob[u]/=total
     return orig_prob
 
-# on calcul les fréquences
-# il faut les fréquences d'arrêt dans une feuille ?
+# compute frequencies
 def events_frequencies(l_event_by_family, c_match_list, event_types=["S","T","TL", "SL", "E"]):
     n_by_branch=dict()
     i_clade=0
@@ -108,7 +108,7 @@ def generate_tree(freq_by_branch, orig_prob, plus_S=0):
         if E=="TL":
             r[u].append(h)
             to_see.append(u)
-        #if E=="E"#on s'arrête, rien à faire
+        #if E=="E"#nothing to do
     for u in tree.leaves():
         u.match=r[u][-1]
     return tree

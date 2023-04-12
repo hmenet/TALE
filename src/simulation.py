@@ -67,10 +67,6 @@ def construct_parasite_inside_host_tree(parasites_model, host_tree, random_root=
         if t1 < i.match.time:
             x=rd.random()
             if x>((birth_rate+death_rate)/rate):
-                #transfer
-                #j=choose from all existing species at time t1 (uniform ? depend on distance ?)
-                #existing_species fait un parcours complet de l'arbre jusqu'au temps t1
-                #pour faire mieux on pourrait faire attention à dans quel ordre on parcourt les noeuds et tenir à jour une liste de toutes les especes encore vivantes
                 l=host_tree.existing_species(t1)
                 k=rd.randint(0, len(l)-1)
                 j=l[k]

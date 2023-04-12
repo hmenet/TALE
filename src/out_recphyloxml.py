@@ -7,7 +7,7 @@ Created on Thu Jan 16 14:17:16 2020
 """
 
 #######################
-#sauvegarde recphyloxml
+#save recphyloxml
 #######################
 
 import arbre

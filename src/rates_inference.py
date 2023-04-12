@@ -56,7 +56,7 @@ def count_events(l_event, min_rate=0.0001,non_used_events=[],geo=False):
 ### done #########
 
 
-#version pour chercher maximum likelihood comme dans ALE ou Corepa
+#version to search for maximum likelihood as in ALE or Corepa
 def gene_rates_ml(rec):
     rec.rates_inference=True
     print(rec.rates.pp())
